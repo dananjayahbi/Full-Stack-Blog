@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { 
   Box, 
   Typography, 
-  Grid, 
+  Grid,
   Card, 
   CardMedia, 
   CardContent, 
@@ -553,14 +553,12 @@ export default function Home() {
                 style={{
                   flex: 1,
                   padding: '12px 16px',
-                  borderRadius: '4px 0 0 4px',
+                  borderRadius: '4px',
                   border: 'none',
                   outline: 'none',
                   fontSize: '16px',
                   marginBottom: '10px',
-                  marginRight: '0',
-                  borderTopRightRadius: window.innerWidth > 600 ? 0 : '4px',
-                  borderBottomRightRadius: window.innerWidth > 600 ? 0 : '4px'
+                  marginRight: '0'
                 }}
               />
               <Button

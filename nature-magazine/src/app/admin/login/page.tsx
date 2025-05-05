@@ -1,19 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import {
-  Container,
-  Typography,
-  TextField,
-  Button,
-  Box,
-  Paper,
-  Alert,
-  CircularProgress
-} from '@mui/material';
-import NaturePeopleIcon from '@mui/icons-material/NaturePeople';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -40,112 +30,127 @@ export default function AdminLogin() {
         return;
       }
 
-      // Redirect to admin dashboard on success
       router.push('/admin/dashboard');
     } catch (err) {
       console.error('Login error:', err);
-      setError('An unexpected error occurred. Please try again.');
+      setError('An unexpected error occurred');
       setLoading(false);
     }
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '100vh',
-          py: 8,
-        }}
-      >
-        <Paper 
-          elevation={3} 
-          sx={{ 
-            p: 4, 
-            width: '100%', 
-            borderRadius: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-            <NaturePeopleIcon sx={{ color: 'primary.main', mr: 1, fontSize: 40 }} />
-            <Typography component="h1" variant="h5" sx={{ fontFamily: 'Georgia, serif', fontWeight: 700 }}>
-              Nature Magazine Admin
-            </Typography>
-          </Box>
+    <div style={{
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      backgroundColor: '#f5f5f5',
+      margin: 0,
+      padding: 0,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '100vh',
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '30px',
+        borderRadius: '8px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        width: '100%',
+        maxWidth: '400px',
+      }}>
+        <h1 style={{
+          textAlign: 'center',
+          margin: '0 0 24px',
+          fontSize: '24px',
+          color: '#333',
+        }}>Admin Login</h1>
 
-          <Typography component="h2" variant="h6" sx={{ mb: 3, textAlign: 'center' }}>
-            Sign in to access the dashboard
-          </Typography>
+        {error && (
+          <div style={{
+            backgroundColor: '#ffebee',
+            color: '#d32f2f',
+            padding: '10px',
+            borderRadius: '4px',
+            marginBottom: '20px',
+          }}>
+            {error}
+          </div>
+        )}
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 3, width: '100%' }}>
-              {error}
-            </Alert>
-          )}
-
-          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              fontWeight: '500' 
+            }}>
+              Email
+            </label>
+            <input
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-            />
-            <TextField
-              margin="normal"
               required
-              fullWidth
-              name="password"
-              label="Password"
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                fontSize: '16px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              fontWeight: '500' 
+            }}>
+              Password
+            </label>
+            <input
               type="password"
-              id="password"
-              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
+              required
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                fontSize: '16px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                boxSizing: 'border-box',
+              }}
             />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              color="primary"
-              size="large"
-              sx={{ mt: 3, mb: 2, py: 1.5, position: 'relative' }}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <CircularProgress 
-                    size={24} 
-                    sx={{ 
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      marginTop: '-12px',
-                      marginLeft: '-12px',
-                    }}
-                  />
-                  Signing In...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '12px',
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '16px',
+              fontWeight: '500',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1,
+            }}
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+
+          <p style={{ marginTop: '20px', textAlign: 'center' }}>
+            <Link href="/health-check" style={{ color: '#1976d2', textDecoration: 'none' }}>
+              Health Check Page
+            </Link>
+          </p>
+        </form>
+      </div>
+    </div>
   );
 }

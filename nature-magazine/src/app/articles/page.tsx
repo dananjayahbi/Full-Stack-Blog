@@ -32,7 +32,7 @@ const mockArticles = [
     excerpt: 'New discoveries from the deepest part of our oceans reveal extraordinary life forms adapted to extreme pressure and darkness.',
     author: 'James Rivera',
     date: '2025-04-28',
-    image: '/images/articles/deep-ocean.jpg',
+    image: 'https://images.unsplash.com/photo-1498623116890-37e912163d5d?q=80&w=2070&auto=format&fit=crop',
     readTime: 8,
     categories: ['Marine Life', 'Discoveries']
   },
@@ -43,7 +43,7 @@ const mockArticles = [
     excerpt: 'Research shows the vital role of the world\'s largest rainforest in regulating global climate patterns and carbon cycling.',
     author: 'Sofia Chen',
     date: '2025-04-22',
-    image: '/images/articles/amazon-rainforest.jpg',
+    image: 'https://images.unsplash.com/photo-1605131545453-3828e8e99a2d?q=80&w=2039&auto=format&fit=crop',
     readTime: 12,
     categories: ['Climate', 'Forests']
   },
@@ -54,7 +54,7 @@ const mockArticles = [
     excerpt: 'Three decades after wolf reintroduction, Yellowstone\'s ecosystem shows dramatic improvements in biodiversity and ecological health.',
     author: 'Marcus Johnson',
     date: '2025-04-15',
-    image: '/images/articles/yellowstone-wolves.jpg',
+    image: 'https://images.unsplash.com/photo-1564349683136-77e08dba1ef3?q=80&w=1744&auto=format&fit=crop',
     readTime: 10,
     categories: ['Wildlife', 'Conservation']
   },
@@ -65,7 +65,7 @@ const mockArticles = [
     excerpt: 'Scientists warn that warming oceans and acidification could eliminate most coral reef ecosystems by 2050 without intervention.',
     author: 'Emma Wilson',
     date: '2025-04-10',
-    image: '/images/articles/coral-reef.jpg',
+    image: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1974&auto=format&fit=crop',
     readTime: 6,
     categories: ['Marine Life', 'Climate']
   },
@@ -76,7 +76,7 @@ const mockArticles = [
     excerpt: 'Researchers document significant changes in timing and routes as birds adapt to altered seasonal patterns across continents.',
     author: 'Sofia Chen',
     date: '2025-04-03',
-    image: '/images/articles/bird-migration.jpg',
+    image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=2068&auto=format&fit=crop',
     readTime: 7,
     categories: ['Birds', 'Climate']
   },
@@ -87,7 +87,7 @@ const mockArticles = [
     excerpt: 'A concerning new study reveals the extent of plastic pollution in marine and terrestrial food webs, reaching remote ecosystems.',
     author: 'James Rivera',
     date: '2025-03-27',
-    image: '/images/articles/microplastics.jpg',
+    image: 'https://images.unsplash.com/photo-1621451537984-a5aa446eaee3?q=80&w=1974&auto=format&fit=crop',
     readTime: 9,
     categories: ['Pollution', 'Marine Life']
   },
@@ -98,7 +98,7 @@ const mockArticles = [
     excerpt: 'How indigenous practices and knowledge systems offer valuable insights for modern conservation and sustainable land management.',
     author: 'Marcus Johnson',
     date: '2025-03-20',
-    image: '/images/articles/indigenous-knowledge.jpg',
+    image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=2274&auto=format&fit=crop',
     readTime: 11,
     categories: ['Conservation', 'Indigenous Cultures']
   },
@@ -109,7 +109,7 @@ const mockArticles = [
     excerpt: 'Unusual rainfall patterns are transforming desert landscapes, with both promising and concerning implications for biodiversity.',
     author: 'Emma Wilson',
     date: '2025-03-15',
-    image: '/images/articles/desert-bloom.jpg',
+    image: 'https://images.unsplash.com/photo-1524889226388-5e49091edb2a?q=80&w=2070&auto=format&fit=crop',
     readTime: 8,
     categories: ['Deserts', 'Climate']
   },
@@ -301,8 +301,7 @@ export default function ArticlesPage() {
                   <CardMedia
                     component="div"
                     sx={{ 
-                      pt: '56.25%', // 16:9 aspect ratio
-                      position: 'relative'
+                      pt: '56.25%' // 16:9 aspect ratio
                     }}
                     image={article.image}
                   >

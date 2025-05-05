@@ -187,17 +187,8 @@ export default function Navbar() {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                <Link href="/api/auth/signin" style={{ textDecoration: 'none' }}>
-                  <Button variant="outlined" size="small" sx={{ mr: 1 }}>
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/api/auth/signin" style={{ textDecoration: 'none' }}>
-                  <Button variant="contained" size="small">
-                    Sign Up
-                  </Button>
-                </Link>
+              <Box sx={{ display: 'none' }}>
+                {/* Login/signup buttons have been removed as requested */}
               </Box>
             )}
 
@@ -259,20 +250,7 @@ export default function Navbar() {
               </Typography>
             </Box>
           </Box>
-        ) : (
-          <Box sx={{ p: 2, display: 'flex', gap: 1 }}>
-            <Link href="/api/auth/signin" style={{ textDecoration: 'none', flexGrow: 1 }}>
-              <Button variant="outlined" fullWidth>
-                Login
-              </Button>
-            </Link>
-            <Link href="/api/auth/signin" style={{ textDecoration: 'none', flexGrow: 1 }}>
-              <Button variant="contained" fullWidth>
-                Sign Up
-              </Button>
-            </Link>
-          </Box>
-        )}
+        ) : null}
         
         <Divider />
 

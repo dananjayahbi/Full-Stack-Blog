@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ThemeRegistry from "@/components/ThemeRegistry";
+import { NextAuthProvider } from "./providers";
+import { Roboto } from 'next/font/google';
+
+// Define fonts
+const roboto = Roboto({
+  weight: ['300', '400', '500', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: "Nature Magazine | Exploring the Wonders of the Natural World",
@@ -32,9 +41,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={roboto.className}>
       <body>
-        <ThemeRegistry>{children}</ThemeRegistry>
+        <NextAuthProvider>
+          <ThemeRegistry>{children}</ThemeRegistry>
+        </NextAuthProvider>
       </body>
     </html>
   );

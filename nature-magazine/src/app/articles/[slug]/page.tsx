@@ -162,7 +162,7 @@ const articlesData = {
 };
 
 // This is a dynamic route page component that receives params from the URL
-export default function ArticlePage({ params }: { params: { slug: string } }) {
+export default async function ArticlePage({ params }: { params: { slug: string } }) {
   // In a real app, we would fetch the article data from a database
   // based on the slug parameter
   const article = articlesData[params.slug];
