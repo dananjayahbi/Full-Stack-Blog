@@ -569,13 +569,18 @@ export default function NewArticlePage() {
                   value={formData.tags}
                   onChange={handleTagsChange}
                   renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip 
-                        label={option} 
-                        size="small" 
-                        {...getTagProps({ index })} 
-                      />
-                    ))
+                    value.map((option, index) => {
+                      // Extract props but handle key separately to avoid React warning
+                      const { key, ...chipProps } = getTagProps({ index });
+                      return (
+                        <Chip
+                          key={key}
+                          label={option}
+                          size="small"
+                          {...chipProps}
+                        />
+                      );
+                    })
                   }
                   renderInput={(params) => (
                     <TextField

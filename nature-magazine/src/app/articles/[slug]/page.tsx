@@ -1,6 +1,8 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import MainLayout from '@/components/MainLayout';
-import { Typography, Box, Chip, Avatar, Grid, Card, CardContent, CardMedia, Divider, Button } from '@mui/material';
-import Image from 'next/image';
+import { Typography, Box, Chip, Avatar, Grid, Divider, Button, CircularProgress } from '@mui/material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import PersonIcon from '@mui/icons-material/Person';
 import FacebookIcon from '@mui/icons-material/Facebook';
@@ -9,17 +11,73 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Link from 'next/link';
 
-// Empty articles data - to be populated with real data later
-const articlesData = {}
-
 // This is a dynamic route page component that receives params from the URL
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  // In a real app, we would fetch the article data from a database
-  // based on the slug parameter
-  const article = articlesData[params.slug];
+export default function ArticlePage({ params }: { params: { slug: string } }) {
+  const [loading, setLoading] = useState(true);
+  const [article, setArticle] = useState<any>(null);
+  const [error, setError] = useState(false);
 
-  // If article doesn't exist, show a message
-  if (!article) {
+  // Fetch article data when component mounts
+  useEffect(() => {
+    const fetchArticle = async () => {
+      try {
+        // For demonstration, check if this is a preview from the admin panel
+        if (params.slug.startsWith('preview-')) {
+          // For preview, we'll just show a mock article
+          // In a real app, you might fetch from a preview API or use local storage
+          setArticle({
+            title: "Preview Article",
+            category: "Preview",
+            author: { 
+              name: "Admin User", 
+              avatar: "/images/default-avatar.png",
+              bio: "This is a preview of how your article will appear."
+            },
+            date: new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }),
+            readingTime: "5 min read",
+            image: "https://source.unsplash.com/random/1200x600/?nature",
+            content: "<p>This is a preview of your article content. In the published version, your formatted content will appear here.</p>",
+            tags: ["Preview", "Draft"],
+            relatedArticles: []
+          });
+        } else {
+          // For real articles, fetch from the API
+          const response = await fetch(`/api/articles/by-slug/${params.slug}`);
+          if (!response.ok) throw new Error('Article not found');
+          const data = await response.json();
+          setArticle(data);
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching article:', err);
+        setError(true);
+        setLoading(false);
+      }
+    };
+
+    fetchArticle();
+  }, [params.slug]);
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <MainLayout>
+        <Box sx={{ py: 8, textAlign: 'center' }}>
+          <CircularProgress />
+          <Typography variant="body1" sx={{ mt: 2 }}>
+            Loading article...
+          </Typography>
+        </Box>
+      </MainLayout>
+    );
+  }
+
+  // Handle error or article not found
+  if (error || !article) {
     return (
       <MainLayout>
         <Box sx={{ py: 8, textAlign: 'center' }}>
@@ -56,7 +114,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
         </Button>
 
         <Chip 
-          label={article.category} 
+          label={article.category || 'Uncategorized'} 
           color="primary" 
           size="small"
           sx={{ mb: 2 }}
@@ -85,45 +143,46 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <PersonIcon sx={{ fontSize: 20, mr: 1, color: 'text.secondary' }} />
             <Typography variant="body2" color="text.secondary">
-              {article.author.name}
+              {article.author?.name || 'Unknown Author'}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <CalendarTodayIcon sx={{ fontSize: 20, mr: 1, color: 'text.secondary' }} />
             <Typography variant="body2" color="text.secondary">
-              {article.date}
+              {article.date || new Date().toLocaleDateString()}
             </Typography>
           </Box>
           <Typography variant="body2" color="text.secondary">
-            {article.readingTime}
+            {article.readingTime || 'Quick read'}
           </Typography>
         </Box>
 
         {/* Featured Image */}
-        <Box
-          sx={{
-            position: 'relative',
-            height: { xs: '300px', md: '500px' },
-            width: '100%',
-            borderRadius: 2,
-            overflow: 'hidden',
-            mb: 6,
-          }}
-        >
-          {/* This would normally be an Image component but we're using a div for simplicity */}
+        {article.image || article.featuredImage ? (
           <Box
             sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
+              position: 'relative',
+              height: { xs: '300px', md: '500px' },
               width: '100%',
-              height: '100%',
-              backgroundImage: `url(${article.image})`,
-              backgroundPosition: 'center',
-              backgroundSize: 'cover',
+              borderRadius: 2,
+              overflow: 'hidden',
+              mb: 6,
             }}
-          />
-        </Box>
+          >
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundImage: `url(${article.image || article.featuredImage})`,
+                backgroundPosition: 'center',
+                backgroundSize: 'cover',
+              }}
+            />
+          </Box>
+        ) : null}
       </Box>
 
       {/* Article Content */}
@@ -151,21 +210,23 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           />
 
           {/* Article Tags */}
-          <Box sx={{ mt: 6, mb: 4 }}>
-            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-              Tags:
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {article.tags.map((tag) => (
-                <Chip 
-                  key={tag} 
-                  label={tag} 
-                  size="small" 
-                  clickable
-                />
-              ))}
+          {article.tags && article.tags.length > 0 && (
+            <Box sx={{ mt: 6, mb: 4 }}>
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+                Tags:
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {article.tags.map((tag: string) => (
+                  <Chip 
+                    key={tag} 
+                    label={tag} 
+                    size="small" 
+                    clickable
+                  />
+                ))}
+              </Box>
             </Box>
-          </Box>
+          )}
 
           {/* Share Icons */}
           <Box sx={{ mt: 4, mb: 6 }}>
@@ -188,37 +249,39 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <Divider sx={{ my: 6 }} />
 
           {/* Author Box */}
-          <Box 
-            sx={{ 
-              p: 3,
-              bgcolor: 'background.paper',
-              borderRadius: 2,
-              boxShadow: 1,
-              mb: 6,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Avatar 
-                src={article.author.avatar} 
-                sx={{ 
-                  width: 64,
-                  height: 64,
-                  mr: 2,
-                }}
-              />
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {article.author.name}
-                </Typography>
-                <Typography variant="body2" color="primary">
-                  Author
-                </Typography>
+          {article.author && (
+            <Box 
+              sx={{ 
+                p: 3,
+                bgcolor: 'background.paper',
+                borderRadius: 2,
+                boxShadow: 1,
+                mb: 6,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Avatar 
+                  src={article.author.avatar || '/images/default-avatar.png'} 
+                  sx={{ 
+                    width: 64,
+                    height: 64,
+                    mr: 2,
+                  }}
+                />
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {article.author.name || 'Unknown Author'}
+                  </Typography>
+                  <Typography variant="body2" color="primary">
+                    Author
+                  </Typography>
+                </Box>
               </Box>
+              <Typography variant="body2">
+                {article.author.bio || 'No biography available for this author.'}
+              </Typography>
             </Box>
-            <Typography variant="body2">
-              {article.author.bio}
-            </Typography>
-          </Box>
+          )}
         </Grid>
 
         {/* Sidebar */}
@@ -247,52 +310,58 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               Related Articles
             </Typography>
             <Box sx={{ mt: 2 }}>
-              {article.relatedArticles.map((relatedArticle) => (
-                <Box key={relatedArticle.id} sx={{ mb: 3 }}>
-                  <Box 
-                    sx={{ 
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 2,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 80,
-                        height: 60,
-                        borderRadius: 1,
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                        backgroundImage: `url(${relatedArticle.image})`,
-                        backgroundPosition: 'center',
-                        backgroundSize: 'cover',
+              {article.relatedArticles && article.relatedArticles.length > 0 ? (
+                article.relatedArticles.map((relatedArticle: any) => (
+                  <Box key={relatedArticle.id} sx={{ mb: 3 }}>
+                    <Box 
+                      sx={{ 
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
                       }}
-                    />
-                    <Box>
-                      <Typography 
-                        variant="subtitle2" 
-                        component="a" 
-                        href={`/articles/${relatedArticle.slug}`}
-                        sx={{ 
-                          fontWeight: 600,
-                          display: 'block',
-                          mb: 0.5,
-                          textDecoration: 'none',
-                          color: 'inherit',
-                          '&:hover': {
-                            color: 'primary.main',
-                          }
+                    >
+                      <Box
+                        sx={{
+                          width: 80,
+                          height: 60,
+                          borderRadius: 1,
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          backgroundImage: `url(${relatedArticle.image})`,
+                          backgroundPosition: 'center',
+                          backgroundSize: 'cover',
                         }}
-                      >
-                        {relatedArticle.title}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {relatedArticle.date}
-                      </Typography>
+                      />
+                      <Box>
+                        <Typography 
+                          variant="subtitle2" 
+                          component={Link} 
+                          href={`/articles/${relatedArticle.slug}`}
+                          sx={{ 
+                            fontWeight: 600,
+                            display: 'block',
+                            mb: 0.5,
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            '&:hover': {
+                              color: 'primary.main',
+                            }
+                          }}
+                        >
+                          {relatedArticle.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {relatedArticle.date}
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
-                </Box>
-              ))}
+                ))
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No related articles available.
+                </Typography>
+              )}
             </Box>
             <Button 
               component={Link}
