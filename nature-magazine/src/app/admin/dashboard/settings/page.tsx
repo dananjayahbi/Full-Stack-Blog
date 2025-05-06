@@ -17,6 +17,7 @@ import {
   ListItemText,
   Switch,
   FormControlLabel,
+  Container,
 } from '@mui/material';
 import {
   Storage as StorageIcon,
@@ -60,7 +61,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <>
+    <Container maxWidth="xl" sx={{ mx: 'auto', width: '100%' }}>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
           Admin Settings
@@ -169,6 +170,6 @@ export default function SettingsPage() {
           </Paper>
         </Grid>
       </Grid>
-    </>
+    </Container>
   );
 }

@@ -28,6 +28,7 @@ import {
   InputLabel,
   Select,
   SelectChangeEvent,
+  Container,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -143,7 +144,7 @@ export default function ArticlesPage() {
     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
-    <>
+    <Container maxWidth="xl" sx={{ mx: 'auto', width: '100%' }}>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
           Articles
@@ -385,6 +386,6 @@ export default function ArticlesPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Container>
   );
 }

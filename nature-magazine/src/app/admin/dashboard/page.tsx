@@ -17,6 +17,7 @@ import {
   Chip,
   IconButton,
   Stack,
+  Container,
 } from '@mui/material';
 import {
   ArticleOutlined as ArticleIcon,
@@ -42,38 +43,6 @@ const dashboardStats = {
   trendsUp: 18.5,
   trendsDown: 4.2
 };
-
-// Mock data for recent articles
-const recentArticles = [
-  {
-    id: '1',
-    title: 'Secrets of the Deep Ocean: Exploring the Mariana Trench',
-    date: '2025-04-28',
-    author: 'James Rivera',
-    status: 'published',
-  },
-  {
-    id: '2',
-    title: 'How the Amazon Rainforest Acts as Earth\'s Carbon Sink',
-    date: '2025-04-22',
-    author: 'Sofia Chen',
-    status: 'published',
-  },
-  {
-    id: '3',
-    title: 'The Return of Wolves to Yellowstone: 30 Years Later',
-    date: '2025-04-15',
-    author: 'Marcus Johnson',
-    status: 'draft',
-  },
-  {
-    id: '4',
-    title: 'Coral Reefs Face Unprecedented Threats from Climate Change',
-    date: '2025-04-10',
-    author: 'Emma Wilson',
-    status: 'published',
-  },
-];
 
 // Stat card component
 interface StatCardProps {
@@ -146,7 +115,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <>
+    <Container maxWidth="xl" sx={{ mx: 'auto', width: '100%' }}>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
           Dashboard
@@ -228,55 +197,21 @@ export default function AdminDashboard() {
               </Button>
             </Box>
             <List>
-              {recentArticles.map((article, index) => (
-                <React.Fragment key={article.id}>
-                  <ListItem
-                    secondaryAction={
-                      <Box>
-                        <IconButton 
-                          edge="end" 
-                          component={Link}
-                          href={`/admin/dashboard/articles/${article.id}/edit`}
-                          size="small"
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    }
-                    sx={{ px: 0 }}
-                  >
-                    <ListItemText
-                      primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Link 
-                            href={`/admin/dashboard/articles/${article.id}/edit`}
-                            style={{ 
-                              textDecoration: 'none',
-                              color: 'inherit',
-                              fontWeight: 500
-                            }}
-                          >
-                            {article.title}
-                          </Link>
-                          <Chip 
-                            label={article.status} 
-                            size="small"
-                            color={article.status === 'published' ? 'success' : 'default'}
-                            variant="outlined"
-                            sx={{ ml: 1 }}
-                          />
-                        </Box>
-                      }
-                      secondary={
-                        <Typography variant="body2" color="text.secondary">
-                          {formatDate(article.date)} by {article.author}
-                        </Typography>
-                      }
-                    />
-                  </ListItem>
-                  {index < recentArticles.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
+              {/* No articles yet - empty state */}
+              <Box sx={{ py: 4, textAlign: 'center' }}>
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  No articles published yet
+                </Typography>
+                <Button 
+                  component={Link}
+                  href="/admin/dashboard/articles/new"
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  sx={{ mt: 2 }}
+                >
+                  Create Your First Article
+                </Button>
+              </Box>
             </List>
           </Paper>
         </Grid>
@@ -332,6 +267,6 @@ export default function AdminDashboard() {
           </Paper>
         </Grid>
       </Grid>
-    </>
+    </Container>
   );
 }
