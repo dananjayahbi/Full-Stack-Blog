@@ -14,7 +14,8 @@ interface Params {
 // GET /api/articles/[id]
 export async function GET(request: NextRequest, { params }: Params) {
   try {
-    const { id } = params;
+    // Await params before accessing properties
+    const id = (await params).id;
     
     const article = await prisma.article.findUnique({
       where: { id },
@@ -61,7 +62,9 @@ export async function PUT(request: NextRequest, { params }: Params) {
       );
     }
 
-    const { id } = params;
+    // Await params before accessing properties
+    const id = (await params).id;
+    
     const {
       title,
       slug,
@@ -106,14 +109,21 @@ export async function PUT(request: NextRequest, { params }: Params) {
     // Handle default admin user or get author ID
     let authorId = existingArticle.authorId;
     
-    // If author email is provided and different from current, try to find matching user
+    // If author is provided, handle different possible formats
     if (author) {
-      const authorUser = await prisma.user.findUnique({
-        where: { email: author }
-      });
+      // Check if author is an object or a string
+      const authorEmail = typeof author === 'object' && author !== null
+        ? author.email  // Extract email if it's an object
+        : author;       // Use directly if it's already a string
       
-      if (authorUser) {
-        authorId = authorUser.id;
+      if (authorEmail && typeof authorEmail === 'string') {
+        const authorUser = await prisma.user.findUnique({
+          where: { email: authorEmail }
+        });
+        
+        if (authorUser) {
+          authorId = authorUser.id;
+        }
       }
     }
 
@@ -176,7 +186,8 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     // Special case for default admin ID - no additional check needed
     // since we're only checking if they're an admin
 
-    const { id } = params;
+    // Await params before accessing properties
+    const id = (await params).id;
     
     // Check if article exists
     const article = await prisma.article.findUnique({
