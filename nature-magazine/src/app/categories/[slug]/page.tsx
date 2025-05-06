@@ -1,132 +1,10 @@
 import MainLayout from '@/components/MainLayout';
-import { Box, Typography, Grid, Card, CardMedia, CardContent, Breadcrumbs, Chip } from '@mui/material';
+import { Box, Typography, Grid, Card, CardMedia, CardContent, Breadcrumbs, Chip, Button } from '@mui/material';
 import Link from 'next/link';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 
-// Mock data for categories and their articles
-const categoriesData = {
-  'wildlife': {
-    name: 'Wildlife',
-    description: 'Discover fascinating articles about animals and wildlife from around the globe.',
-    image: '/images/wildlife.jpg',
-    articles: [
-      {
-        id: '3',
-        title: 'The Extraordinary Migration of the Monarch Butterfly',
-        excerpt: 'Following the incredible journey of monarch butterflies as they travel thousands of miles in one of nature\'s most remarkable migrations.',
-        image: '/images/monarch.jpg',
-        slug: 'monarch-butterfly-migration',
-        category: 'Wildlife',
-        author: 'Sofia Chen',
-        date: 'March 28, 2025',
-      },
-      {
-        id: '9',
-        title: 'Wolves Return: Restoring Nature\'s Balance',
-        excerpt: 'The ecological impact of wolf reintroduction programs and what they teach us about ecosystem management.',
-        image: '/images/wolves.jpg',
-        slug: 'wolves-return',
-        category: 'Wildlife',
-        author: 'Elena Rodriguez',
-        date: 'April 8, 2025',
-      },
-      {
-        id: '13',
-        title: 'The Secret Life of Wild Elephants',
-        excerpt: 'New research reveals the complex social structures and emotional intelligence of elephant herds.',
-        image: '/images/elephants.jpg',
-        slug: 'secret-life-wild-elephants',
-        category: 'Wildlife',
-        author: 'Thomas Brown',
-        date: 'March 12, 2025',
-      },
-      {
-        id: '14',
-        title: 'Tropical Birds: Nature\'s Living Rainbows',
-        excerpt: 'Exploring the evolutionary adaptations behind the dazzling colors of tropical bird species.',
-        image: '/images/tropical-birds.jpg',
-        slug: 'tropical-birds-living-rainbows',
-        category: 'Wildlife',
-        author: 'Maria Lopez',
-        date: 'February 28, 2025',
-      },
-    ]
-  },
-  'forests': {
-    name: 'Forests',
-    description: 'Explore the majestic forests and woodlands that provide habitat for countless species.',
-    image: '/images/forest-category.jpg',
-    articles: [
-      {
-        id: '1',
-        title: 'The Majestic Redwood Forests: A Living Link to Ancient Times',
-        excerpt: 'Explore the breathtaking beauty and ecological importance of California\'s redwood forests, home to some of the oldest living organisms on Earth.',
-        image: '/images/redwoods.jpg',
-        slug: 'majestic-redwood-forests',
-        category: 'Forests',
-        author: 'Emma Wilson',
-        date: 'May 2, 2025',
-      },
-      {
-        id: '6',
-        title: 'The Silent Communication of Trees',
-        excerpt: 'New research reveals how trees communicate and share resources through vast underground networks.',
-        image: '/images/trees.jpg',
-        slug: 'silent-communication-trees',
-        category: 'Forests',
-        author: 'David Chen',
-        date: 'April 25, 2025',
-      },
-      {
-        id: '10',
-        title: 'Mushroom Networks: The Unseen Web Beneath Our Feet',
-        excerpt: 'How fungal networks help forests thrive through nutrient sharing and communication systems.',
-        image: '/images/mushrooms.jpg',
-        slug: 'mushroom-networks',
-        category: 'Forests',
-        author: 'Michael Zhang',
-        date: 'March 30, 2025',
-      },
-    ]
-  },
-  'marine-life': {
-    name: 'Marine Life',
-    description: 'Explore the incredible diversity of creatures that live in our oceans and seas.',
-    image: '/images/marine-life.jpg',
-    articles: [
-      {
-        id: '2',
-        title: 'Ocean Depths: Discovering New Marine Species',
-        excerpt: 'Scientists have discovered over 30 new marine species in deep-sea explorations last year. What does this tell us about our vast, unexplored oceans?',
-        image: '/images/ocean.jpg',
-        slug: 'ocean-depths-new-species',
-        category: 'Marine Life',
-        author: 'James Rivera',
-        date: 'April 15, 2025',
-      },
-      {
-        id: '15',
-        title: 'The Secret Language of Dolphin Pods',
-        excerpt: 'How dolphins use unique vocalizations and body language to communicate within their social groups.',
-        image: '/images/dolphins.jpg',
-        slug: 'secret-language-dolphin-pods',
-        category: 'Marine Life',
-        author: 'Patricia Kim',
-        date: 'February 15, 2025',
-      },
-      {
-        id: '16',
-        title: 'Colorful Coral: The Ocean\'s Living Canvas',
-        excerpt: 'Understanding the beauty and biological importance of coral species worldwide.',
-        image: '/images/coral-reefs.jpg',
-        slug: 'colorful-coral-oceans-canvas',
-        category: 'Marine Life',
-        author: 'Omar Hassan',
-        date: 'January 30, 2025',
-      },
-    ]
-  },
-};
+// Empty categories data - to be filled with real data later
+const categoriesData = {};
 
 export default function CategoryPage({ params }: { params: { slug: string } }) {
   // In a real app, we would fetch the category data from a database
@@ -145,9 +23,13 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
           <Typography variant="body1" paragraph>
             The category you're looking for doesn't exist or has been removed.
           </Typography>
-          <Link href="/categories">
+          <Button 
+            component={Link}
+            href="/categories"
+            variant="contained" 
+          >
             Back to Categories
-          </Link>
+          </Button>
         </Box>
       </MainLayout>
     );
@@ -259,63 +141,80 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
           Articles in {category.name}
         </Typography>
         
-        <Grid container spacing={4}>
-          {category.articles.map((article) => (
-            <Grid item key={article.id} xs={12} sm={6} md={4}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardMedia
-                  component="div"
-                  sx={{
-                    pt: '56.25%', // 16:9 aspect ratio
-                    position: 'relative',
-                  }}
-                  image={article.image || '/images/placeholder.jpg'}
-                >
-                  <Box
+        {category.articles && category.articles.length > 0 ? (
+          <Grid container spacing={4}>
+            {category.articles.map((article) => (
+              <Grid item key={article.id} xs={12} sm={6} md={4}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <CardMedia
+                    component="div"
                     sx={{
-                      position: 'absolute',
-                      top: 16,
-                      left: 16,
-                      backgroundColor: 'primary.main',
-                      color: 'white',
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 1,
-                      fontWeight: 500,
-                      fontSize: '0.8rem',
+                      pt: '56.25%', // 16:9 aspect ratio
+                      position: 'relative',
                     }}
+                    image={article.image || '/images/placeholder.jpg'}
                   >
-                    {article.category}
-                  </Box>
-                </CardMedia>
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography 
-                    gutterBottom 
-                    variant="h6" 
-                    component="h2"
-                    sx={{ fontFamily: 'Georgia, serif', fontWeight: 600 }}
-                  >
-                    <Link href={`/articles/${article.slug}`} style={{ 
-                      color: 'inherit', 
-                      textDecoration: 'none',
-                      '&:hover': { color: 'primary.main' }
-                    }}>
-                      {article.title}
-                    </Link>
-                  </Typography>
-                  <Box sx={{ mb: 2, display: 'flex', gap: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
-                    <span>{article.author}</span>
-                    <span>•</span>
-                    <span>{article.date}</span>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    {article.excerpt}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 16,
+                        left: 16,
+                        backgroundColor: 'primary.main',
+                        color: 'white',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontWeight: 500,
+                        fontSize: '0.8rem',
+                      }}
+                    >
+                      {article.category}
+                    </Box>
+                  </CardMedia>
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography 
+                      gutterBottom 
+                      variant="h6" 
+                      component="h2"
+                      sx={{ fontFamily: 'Georgia, serif', fontWeight: 600 }}
+                    >
+                      <Link href={`/articles/${article.slug}`} style={{ 
+                        color: 'inherit', 
+                        textDecoration: 'none',
+                        '&:hover': { color: 'primary.main' }
+                      }}>
+                        {article.title}
+                      </Link>
+                    </Typography>
+                    <Box sx={{ mb: 2, display: 'flex', gap: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
+                      <span>{article.author}</span>
+                      <span>•</span>
+                      <span>{article.date}</span>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {article.excerpt}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h5" gutterBottom>No articles available in this category yet</Typography>
+            <Typography variant="body1" color="text.secondary" paragraph>
+              New content will be added soon.
+            </Typography>
+            <Button 
+              variant="outlined"
+              component={Link}
+              href="/categories"
+              sx={{ mt: 2 }}
+            >
+              Browse All Categories
+            </Button>
+          </Box>
+        )}
       </Box>
 
       {/* Related Categories */}
@@ -354,7 +253,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
             href="/categories"
             clickable
             color="primary"
-            sx={{ m: 0.5, fontWeight: 600 }}
+            sx={{ m: 0.5 }}
           />
         </Box>
       </Box>

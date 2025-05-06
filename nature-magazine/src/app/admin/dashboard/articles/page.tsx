@@ -39,113 +39,12 @@ import {
 } from '@mui/icons-material';
 import Link from 'next/link';
 
-// Mock data for articles
-const mockArticles = [
-  {
-    id: '1',
-    title: 'Secrets of the Deep Ocean: Exploring the Mariana Trench',
-    slug: 'secrets-of-the-deep-ocean',
-    author: 'James Rivera',
-    date: '2025-04-28',
-    status: 'published',
-    category: 'Marine Life',
-    views: 845,
-  },
-  {
-    id: '2',
-    title: 'How the Amazon Rainforest Acts as Earth\'s Carbon Sink',
-    slug: 'amazon-rainforest-carbon-sink',
-    author: 'Sofia Chen',
-    date: '2025-04-22',
-    status: 'published',
-    category: 'Forests',
-    views: 1203,
-  },
-  {
-    id: '3',
-    title: 'The Return of Wolves to Yellowstone: 30 Years Later',
-    slug: 'return-of-wolves-yellowstone',
-    author: 'Marcus Johnson',
-    date: '2025-04-15',
-    status: 'draft',
-    category: 'Wildlife',
-    views: 0,
-  },
-  {
-    id: '4',
-    title: 'Coral Reefs Face Unprecedented Threats from Climate Change',
-    slug: 'coral-reefs-climate-change',
-    author: 'Emma Wilson',
-    date: '2025-04-10',
-    status: 'published',
-    category: 'Marine Life',
-    views: 678,
-  },
-  {
-    id: '5',
-    title: 'Bird Migration Patterns Shifting Due to Climate Change',
-    slug: 'bird-migration-patterns-changing',
-    author: 'Sofia Chen',
-    date: '2025-04-03',
-    status: 'published',
-    category: 'Birds',
-    views: 521,
-  },
-  {
-    id: '6',
-    title: 'Microplastics Found Throughout the Food Chain',
-    slug: 'microplastics-food-chain',
-    author: 'James Rivera',
-    date: '2025-03-27',
-    status: 'published',
-    category: 'Pollution',
-    views: 892,
-  },
-  {
-    id: '7',
-    title: 'Indigenous Communities and Traditional Ecological Knowledge',
-    slug: 'traditional-ecological-knowledge',
-    author: 'Marcus Johnson',
-    date: '2025-03-20',
-    status: 'draft',
-    category: 'Indigenous Cultures',
-    views: 0,
-  },
-  {
-    id: '8',
-    title: 'Desert Blooms: Changing Patterns in Arid Ecosystems',
-    slug: 'desert-blooms-climate-change',
-    author: 'Emma Wilson',
-    date: '2025-03-15',
-    status: 'published',
-    category: 'Deserts',
-    views: 435,
-  },
-  {
-    id: '9',
-    title: 'Urban Wildlife: Adapting to City Living',
-    slug: 'urban-wildlife-city-living',
-    author: 'James Rivera',
-    date: '2025-03-08',
-    status: 'published',
-    category: 'Wildlife',
-    views: 623,
-  },
-  {
-    id: '10',
-    title: 'Sustainable Fishing Practices in Coastal Communities',
-    slug: 'sustainable-fishing-coastal-communities',
-    author: 'Sofia Chen',
-    date: '2025-03-01',
-    status: 'published',
-    category: 'Oceans',
-    views: 782,
-  },
-];
+// Empty mock articles array to be populated with real data later
+const mockArticles = [];
 
-// Extract unique categories and statuses for filters
-const categories = Array.from(new Set(mockArticles.map(article => article.category)));
-const statuses = Array.from(new Set(mockArticles.map(article => article.status)));
+// Empty categories and statuses since there are no articles
+const categories = [];
+const statuses = ['published', 'draft'];
 
 export default function ArticlesPage() {
   // State for table pagination
@@ -230,11 +129,12 @@ export default function ArticlesPage() {
 
   // Filter articles
   const filteredArticles = mockArticles.filter(article => {
-    const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.slug.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.slug?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === '' || article.category === categoryFilter;
     const matchesStatus = statusFilter === '' || article.status === statusFilter;
+    
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -307,6 +207,7 @@ export default function ArticlesPage() {
                   value={categoryFilter}
                   label="Category"
                   onChange={handleCategoryFilterChange}
+                  disabled={categories.length === 0}
                 >
                   <MenuItem value="">All Categories</MenuItem>
                   {categories.map((category) => (
@@ -406,7 +307,7 @@ export default function ArticlesPage() {
                     />
                   </TableCell>
                   <TableCell>{formatDate(article.date)}</TableCell>
-                  <TableCell>{article.views.toLocaleString()}</TableCell>
+                  <TableCell>{article.views?.toLocaleString()}</TableCell>
                   <TableCell align="right">
                     <Box sx={{ '& > *': { ml: 1 } }}>
                       <IconButton
@@ -439,7 +340,9 @@ export default function ArticlesPage() {
                   <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
                     <Typography variant="body1">No articles found</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      Try adjusting your search or filter criteria
+                      {searchQuery || categoryFilter || statusFilter ? 
+                        'Try adjusting your search or filter criteria' : 
+                        'Click "New Article" to create your first article'}
                     </Typography>
                   </TableCell>
                 </TableRow>
