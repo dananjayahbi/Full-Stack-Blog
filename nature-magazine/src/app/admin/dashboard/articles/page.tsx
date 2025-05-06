@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -29,6 +29,8 @@ import {
   Select,
   SelectChangeEvent,
   Container,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -40,14 +42,43 @@ import {
 } from '@mui/icons-material';
 import Link from 'next/link';
 
-// Empty mock articles array to be populated with real data later
-const mockArticles = [];
+// Interface for articles
+interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  authorId: string;
+  author: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  published: boolean;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  viewCount: number;
+  featuredImage?: string;
+  categoryIds: string[];
+  categories: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
+  tags: string[];
+}
 
-// Empty categories and statuses since there are no articles
-const categories = [];
 const statuses = ['published', 'draft'];
 
 export default function ArticlesPage() {
+  // State for articles and loading
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [categories, setCategories] = useState<string[]>([]);
+  
   // State for table pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -64,6 +95,46 @@ export default function ArticlesPage() {
   // State for delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  // Fetch articles on component mount
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
+  // Function to fetch articles from API
+  const fetchArticles = async () => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch('/api/articles');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch articles: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setArticles(data);
+      
+      // Extract unique categories
+      const uniqueCategories = Array.from(
+        new Set(
+          data.flatMap((article: Article) => 
+            article.categories.map((category) => category.name)
+          )
+        )
+      );
+      setCategories(uniqueCategories as string[]);
+      
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+      setError('Failed to load articles. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle filter menu
   const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -106,35 +177,74 @@ export default function ArticlesPage() {
   const handleDeleteClick = (id: string) => {
     setArticleToDelete(id);
     setDeleteDialogOpen(true);
+    setDeleteError('');
   };
 
   // Confirm delete
-  const handleDeleteConfirm = () => {
-    // Delete article logic would go here
-    console.log(`Deleting article ${articleToDelete}`);
-    setDeleteDialogOpen(false);
-    setArticleToDelete(null);
+  const handleDeleteConfirm = async () => {
+    if (!articleToDelete) return;
+    
+    setIsDeleting(true);
+    setDeleteError('');
+    
+    try {
+      const response = await fetch(`/api/articles/${articleToDelete}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete article');
+      }
+      
+      // Remove the deleted article from state
+      setArticles(prevArticles => 
+        prevArticles.filter(article => article.id !== articleToDelete)
+      );
+      
+      setDeleteDialogOpen(false);
+      setArticleToDelete(null);
+      
+    } catch (error: any) {
+      console.error('Error deleting article:', error);
+      setDeleteError(error.message || 'Failed to delete article');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Cancel delete
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setArticleToDelete(null);
+    setDeleteError('');
   };
 
   // Format date
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
     const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
+  // Get the primary category of an article
+  const getPrimaryCategory = (article: Article) => {
+    return article.categories.length > 0 ? article.categories[0].name : 'Uncategorized';
+  };
+
   // Filter articles
-  const filteredArticles = mockArticles.filter(article => {
-    const matchesSearch = article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredArticles = articles.filter(article => {
+    const matchesSearch = 
+      article.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.excerpt?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      article.author?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.slug?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === '' || article.category === categoryFilter;
-    const matchesStatus = statusFilter === '' || article.status === statusFilter;
+      
+    const matchesCategory = categoryFilter === '' || 
+      article.categories?.some(category => category.name === categoryFilter);
+      
+    const status = article.published ? 'published' : 'draft';
+    const matchesStatus = statusFilter === '' || status === statusFilter;
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
@@ -158,6 +268,13 @@ export default function ArticlesPage() {
           New Article
         </Button>
       </Box>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       <Paper sx={{ width: '100%', mb: 4, borderRadius: 2, overflow: 'hidden' }}>
         {/* Filters and Search */}
@@ -265,103 +382,114 @@ export default function ArticlesPage() {
           )}
         </Box>
 
+        {/* Loading Indicator */}
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+            <CircularProgress />
+          </Box>
+        )}
+
         {/* Articles Table */}
-        <TableContainer>
-          <Table sx={{ minWidth: 650 }} aria-label="articles table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Title</TableCell>
-                <TableCell>Author</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Views</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {displayedArticles.map((article) => (
-                <TableRow
-                  key={article.id}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                >
-                  <TableCell component="th" scope="row">
-                    <Link 
-                      href={`/admin/dashboard/articles/${article.id}/edit`}
-                      style={{ 
-                        color: 'inherit', 
-                        textDecoration: 'none',
-                        fontWeight: 500
-                      }}
-                    >
-                      {article.title}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{article.author}</TableCell>
-                  <TableCell>{article.category}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={article.status}
-                      size="small"
-                      color={article.status === 'published' ? 'success' : 'default'}
-                      variant={article.status === 'published' ? 'filled' : 'outlined'}
-                    />
-                  </TableCell>
-                  <TableCell>{formatDate(article.date)}</TableCell>
-                  <TableCell>{article.views?.toLocaleString()}</TableCell>
-                  <TableCell align="right">
-                    <Box sx={{ '& > *': { ml: 1 } }}>
-                      <IconButton
-                        size="small"
-                        component={Link}
-                        href={`/articles/${article.slug}`}
-                        target="_blank"
-                      >
-                        <VisibilityIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        component={Link}
-                        href={`/admin/dashboard/articles/${article.id}/edit`}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteClick(article.id)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {displayedArticles.length === 0 && (
+        {!loading && (
+          <TableContainer>
+            <Table sx={{ minWidth: 650 }} aria-label="articles table">
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
-                    <Typography variant="body1">No articles found</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      {searchQuery || categoryFilter || statusFilter ? 
-                        'Try adjusting your search or filter criteria' : 
-                        'Click "New Article" to create your first article'}
-                    </Typography>
-                  </TableCell>
+                  <TableCell>Title</TableCell>
+                  <TableCell>Author</TableCell>
+                  <TableCell>Category</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Views</TableCell>
+                  <TableCell align="right">Actions</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {displayedArticles.map((article) => (
+                  <TableRow
+                    key={article.id}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  >
+                    <TableCell component="th" scope="row">
+                      <Link 
+                        href={`/admin/dashboard/articles/${article.id}/edit`}
+                        style={{ 
+                          color: 'inherit', 
+                          textDecoration: 'none',
+                          fontWeight: 500
+                        }}
+                      >
+                        {article.title}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{article.author?.name || 'Unknown'}</TableCell>
+                    <TableCell>{getPrimaryCategory(article)}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={article.published ? 'published' : 'draft'}
+                        size="small"
+                        color={article.published ? 'success' : 'default'}
+                        variant={article.published ? 'filled' : 'outlined'}
+                      />
+                    </TableCell>
+                    <TableCell>{formatDate(article.published ? article.publishedAt : article.createdAt)}</TableCell>
+                    <TableCell>{article.viewCount?.toLocaleString() || 0}</TableCell>
+                    <TableCell align="right">
+                      <Box sx={{ '& > *': { ml: 1 } }}>
+                        <IconButton
+                          size="small"
+                          component={Link}
+                          href={`/articles/${article.slug}`}
+                          target="_blank"
+                        >
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          component={Link}
+                          href={`/admin/dashboard/articles/${article.id}/edit`}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteClick(article.id)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!loading && displayedArticles.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 3 }}>
+                      <Typography variant="body1">No articles found</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        {searchQuery || categoryFilter || statusFilter ? 
+                          'Try adjusting your search or filter criteria' : 
+                          'Click "New Article" to create your first article'}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
         
         {/* Table Pagination */}
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={filteredArticles.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+        {!loading && (
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={filteredArticles.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        )}
       </Paper>
 
       {/* Delete Confirmation Dialog */}
@@ -378,11 +506,21 @@ export default function ArticlesPage() {
           <DialogContentText id="alert-dialog-description">
             Are you sure you want to delete this article? This action cannot be undone.
           </DialogContentText>
+          {deleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteError}
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error">
-            Delete
+          <Button onClick={handleDeleteCancel} disabled={isDeleting}>Cancel</Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error"
+            disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={16} /> : null}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

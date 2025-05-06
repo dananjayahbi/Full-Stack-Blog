@@ -45,8 +45,8 @@ import Link from 'next/link';
 import RichTextEditor from '@/components/editor/RichTextEditor';
 import LexicalEditor from '@/components/editor/LexicalEditor';
 
-// Mock categories for demonstration - would be fetched from API in real app
-const mockCategories = [
+// Fallback categories for error cases
+const fallbackCategories = [
   { id: '1', name: 'Wildlife' },
   { id: '2', name: 'Conservation' },
   { id: '3', name: 'Ecosystems' },
@@ -83,27 +83,33 @@ export default function NewArticlePage() {
   const [imageError, setImageError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
 
-  // State for real categories from API
-  const [categories, setCategories] = useState(mockCategories);
+  // State for categories from API
+  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [categoryError, setCategoryError] = useState('');
 
   // Fetch categories on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       setIsLoadingCategories(true);
+      setCategoryError('');
+      
       try {
-        // This would be a real API call in production
-        // const response = await fetch('/api/categories');
-        // const data = await response.json();
-        // setCategories(data);
+        // Fetch categories from the real API endpoint
+        const response = await fetch('/api/categories');
         
-        // For demo purposes, just use mock data after a delay
-        setTimeout(() => {
-          setCategories(mockCategories);
-          setIsLoadingCategories(false);
-        }, 500);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch categories: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setCategories(data);
+        setIsLoadingCategories(false);
       } catch (error) {
         console.error('Error fetching categories:', error);
+        setCategoryError('Failed to load categories. Using default categories instead.');
+        // Use fallback categories in case of an error
+        setCategories(fallbackCategories);
         setIsLoadingCategories(false);
       }
     };
@@ -233,23 +239,46 @@ export default function NewArticlePage() {
   };
   
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (validateForm()) {
       setIsSubmitting(true);
       
-      // Simulate API call
-      setTimeout(() => {
-        console.log('Article submitted:', formData);
-        setIsSubmitting(false);
+      try {
+        // Send data to the API endpoint
+        const response = await fetch('/api/articles', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+
+        // Handle API response
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create article');
+        }
+
+        const savedArticle = await response.json();
+        console.log('Article created:', savedArticle);
+        
+        // Show success message
         setSuccess(true);
         
         // Redirect to articles list after successful submission
         setTimeout(() => {
           router.push('/admin/dashboard/articles');
         }, 2000);
-      }, 1000);
+      } catch (error: any) {
+        console.error('Error creating article:', error);
+        setErrors(prev => ({ 
+          ...prev, 
+          submit: error.message || 'Failed to create article. Please try again.' 
+        }));
+        setIsSubmitting(false);
+      }
     }
   };
   
@@ -312,6 +341,13 @@ export default function NewArticlePage() {
       {success && (
         <Alert severity="success" sx={{ mb: 4 }}>
           Article created successfully! Redirecting...
+        </Alert>
+      )}
+      
+      {/* Error Alert */}
+      {errors.submit && (
+        <Alert severity="error" sx={{ mb: 4 }}>
+          {errors.submit}
         </Alert>
       )}
       
@@ -479,7 +515,7 @@ export default function NewArticlePage() {
                 {/* Categories */}
                 <FormControl 
                   fullWidth 
-                  error={!!errors.categories}
+                  error={!!errors.categories || !!categoryError}
                   sx={{ mb: 3 }}
                 >
                   <InputLabel id="categories-label">Categories</InputLabel>
@@ -519,6 +555,9 @@ export default function NewArticlePage() {
                   </Select>
                   {errors.categories && (
                     <FormHelperText>{errors.categories}</FormHelperText>
+                  )}
+                  {categoryError && !errors.categories && (
+                    <FormHelperText error>{categoryError}</FormHelperText>
                   )}
                 </FormControl>
                 
