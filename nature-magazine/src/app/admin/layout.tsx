@@ -53,16 +53,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // Protect admin routes
+  // Check if this is the login page
+  const isLoginPage = pathname?.includes('/admin/login');
+
+  // Track client-side mounting - always call useEffect regardless of conditions
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    setMounted(true);
+  }, []);
+
+  // Protect admin routes - always call useEffect in the same order
+  useEffect(() => {
+    if (mounted && status === 'unauthenticated' && !isLoginPage) {
       router.push('/admin/login');
     }
-  }, [status, router]);
+  }, [status, router, mounted, isLoginPage]);
+
+  // If this is the login page, just render the children without protection
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   // Handle loading state
-  if (status === 'loading') {
+  if (status === 'loading' || !mounted) {
     return (
       <Box
         sx={{
@@ -77,8 +91,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  // Handle unauthenticated state
-  if (status === 'unauthenticated') {
+  // Handle unauthenticated state for non-login pages
+  if (status === 'unauthenticated' && !isLoginPage) {
     return null; // Will redirect in useEffect
   }
 

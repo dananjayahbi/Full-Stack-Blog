@@ -29,7 +29,9 @@ import {
   Divider,
   Tooltip,
   Snackbar,
-  Alert
+  Alert,
+  Container,
+  LinearProgress
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -44,109 +46,8 @@ import {
   Link as LinkIcon,
 } from '@mui/icons-material';
 
-// Mock media data
-const mockMedia = [
-  {
-    id: '1',
-    title: 'Rainforest Canopy',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=2068&auto=format&fit=crop',
-    size: '2.4 MB',
-    dimensions: '2068 x 1379',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-04-20'
-  },
-  {
-    id: '2',
-    title: 'Mountain Landscape',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop',
-    size: '3.1 MB',
-    dimensions: '2070 x 1380',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-04-18'
-  },
-  {
-    id: '3',
-    title: 'Endangered Species Report',
-    type: 'pdf',
-    url: '/documents/endangered-species-report.pdf',
-    size: '1.8 MB',
-    dimensions: '',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-04-15'
-  },
-  {
-    id: '4',
-    title: 'Coral Reef',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?q=80&w=1974&auto=format&fit=crop',
-    size: '2.7 MB',
-    dimensions: '1974 x 1316',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-04-12'
-  },
-  {
-    id: '5',
-    title: 'Amazon Wildlife Documentary',
-    type: 'video',
-    url: '/videos/amazon-wildlife-documentary.mp4',
-    size: '48.5 MB',
-    dimensions: '1920 x 1080',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-04-10'
-  },
-  {
-    id: '6',
-    title: 'African Savanna',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1547970810-dc1eac37d174?q=80&w=1974&auto=format&fit=crop',
-    size: '1.9 MB',
-    dimensions: '1974 x 1316',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-04-05'
-  },
-  {
-    id: '7',
-    title: 'Ocean Cleanup Initiative',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1621451537984-a5aa446eaee3?q=80&w=1974&auto=format&fit=crop',
-    size: '2.2 MB',
-    dimensions: '1974 x 1316',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-04-03'
-  },
-  {
-    id: '8',
-    title: 'Climate Change Research Data',
-    type: 'file',
-    url: '/documents/climate-research-data.xlsx',
-    size: '0.8 MB',
-    dimensions: '',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-03-28'
-  },
-  {
-    id: '9',
-    title: 'Arctic Ice Melting Timelapse',
-    type: 'video',
-    url: '/videos/arctic-ice-timelapse.mp4',
-    size: '35.2 MB',
-    dimensions: '1920 x 1080',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-03-25'
-  },
-  {
-    id: '10',
-    title: 'Desert Bloom After Rain',
-    type: 'image',
-    url: 'https://images.unsplash.com/photo-1508083460982-901991ac95b8?q=80&w=2070&auto=format&fit=crop',
-    size: '2.5 MB',
-    dimensions: '2070 x 1380',
-    uploadedBy: 'Admin',
-    uploadDate: '2025-03-20'
-  }
-];
+// Empty media array to be populated with real data later
+const mockMedia = [];
 
 export default function MediaLibraryPage() {
   // State for tabs, search, and filtering
@@ -275,7 +176,7 @@ export default function MediaLibraryPage() {
   };
 
   return (
-    <>
+    <Container maxWidth="xl" sx={{ mx: 'auto', width: '100%' }}>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
           Media Library
@@ -340,135 +241,21 @@ export default function MediaLibraryPage() {
 
         {/* Media Grid */}
         <Box sx={{ p: 3 }}>
-          {filteredMedia.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 5 }}>
-              <Typography variant="h6" gutterBottom>
-                No media found
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Try adjusting your search or filters, or upload new media
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<CloudUploadIcon />}
-                onClick={handleUploadDialogOpen}
-                sx={{ mt: 2 }}
-              >
-                Upload Files
-              </Button>
-            </Box>
-          ) : (
-            <Grid container spacing={3}>
-              {filteredMedia.map((media) => (
-                <Grid item key={media.id} xs={12} sm={6} md={4} lg={3}>
-                  <Card sx={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4
-                    }
-                  }}>
-                    {/* Media Preview */}
-                    <Box
-                      onClick={() => handleMediaDetails(media)}
-                      sx={{ 
-                        position: 'relative',
-                        height: 160,
-                        backgroundColor: 'grey.100',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {media.type === 'image' ? (
-                        <CardMedia
-                          component="img"
-                          image={media.url}
-                          alt={media.title}
-                          sx={{ 
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                        />
-                      ) : (
-                        <Box sx={{ 
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          alignItems: 'center' 
-                        }}>
-                          {getMediaTypeIcon(media.type)}
-                          <Typography variant="caption" sx={{ mt: 1 }}>
-                            {media.type.toUpperCase()}
-                          </Typography>
-                        </Box>
-                      )}
-
-                      <Chip
-                        label={media.type}
-                        size="small"
-                        color="primary"
-                        variant="filled"
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                          textTransform: 'capitalize'
-                        }}
-                      />
-                    </Box>
-
-                    {/* Media Info */}
-                    <Box sx={{ p: 2, pt: 1.5, flexGrow: 1 }}>
-                      <Typography 
-                        variant="subtitle1" 
-                        sx={{ 
-                          fontWeight: 500,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}
-                        title={media.title}
-                      >
-                        {media.title}
-                      </Typography>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        mt: 0.5
-                      }}>
-                        <Typography variant="caption" color="text.secondary">
-                          {media.size}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatDate(media.uploadDate)}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Actions */}
-                    <CardActions sx={{ borderTop: 1, borderColor: 'divider', justifyContent: 'space-between' }}>
-                      <Tooltip title="Copy URL">
-                        <IconButton size="small" onClick={() => handleCopyUrl(media.url)}>
-                          <CopyIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" onClick={() => handleDeleteClick(media.id)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </CardActions>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          )}
+          <Box sx={{ textAlign: 'center', py: 5 }}>
+            <Typography variant="h6" gutterBottom>
+              No media found
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Upload media files to use in your articles and pages
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<CloudUploadIcon />}
+              onClick={handleUploadDialogOpen}
+            >
+              Upload Files
+            </Button>
+          </Box>
         </Box>
       </Paper>
 
@@ -738,7 +525,7 @@ export default function MediaLibraryPage() {
         message="URL copied to clipboard"
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
-    </>
+    </Container>
   );
 }
 

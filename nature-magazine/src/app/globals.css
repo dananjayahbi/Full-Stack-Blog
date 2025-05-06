@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
+/* Import Quill core styles */
+@import 'react-quill/dist/quill.snow.css';
+@import 'react-quill/dist/quill.bubble.css';
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 245, 245, 247;
 }
 
 @theme inline {
@@ -16,11 +22,60 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --foreground-rgb: 255, 255, 255;
+    --background-rgb: 0, 0, 0;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom Quill editor styles */
+.ql-editor {
+  min-height: 300px;
+  font-size: 1.1rem;
+  line-height: 1.5;
+}
+
+.ql-container {
+  font-family: inherit !important;
+}
+
+/* Image alignment styles */
+.ql-editor .ql-align-left {
+  text-align: left;
+}
+
+.ql-editor .ql-align-center {
+  text-align: center;
+}
+
+.ql-editor .ql-align-right {
+  text-align: right;
+}
+
+.ql-editor img {
+  max-width: 100%;
+  height: auto;
+  margin: 10px 0;
+}
+
+/* Style for different image alignments */
+.ql-editor p.ql-align-center img {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+.ql-editor p.ql-align-right img {
+  margin-left: auto;
+  margin-right: 0;
+  display: block;
 }

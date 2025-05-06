@@ -6,19 +6,46 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prisma:seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "db:seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
+    "@emotion/css": "^11.13.5",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@lexical/clipboard": "^0.31.0",
+    "@lexical/code": "^0.31.0",
+    "@lexical/file": "^0.31.0",
+    "@lexical/history": "^0.31.0",
+    "@lexical/html": "^0.31.0",
+    "@lexical/link": "^0.31.0",
+    "@lexical/list": "^0.31.0",
+    "@lexical/markdown": "^0.31.0",
+    "@lexical/overflow": "^0.31.0",
+    "@lexical/plain-text": "^0.31.0",
+    "@lexical/react": "^0.31.0",
+    "@lexical/rich-text": "^0.31.0",
+    "@lexical/selection": "^0.31.0",
+    "@lexical/table": "^0.31.0",
+    "@lexical/utils": "^0.31.0",
+    "@lexical/yjs": "^0.31.0",
     "@mui/icons-material": "^7.0.2",
     "@mui/material": "^7.0.2",
     "@prisma/client": "^6.7.0",
+    "@types/quill": "^2.0.14",
     "bcrypt": "^5.1.1",
+    "lexical": "^0.31.0",
     "next": "15.3.1",
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-quill": "^2.0.0",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.26"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -31,6 +58,7 @@
     "eslint-config-next": "15.3.1",
     "prisma": "^6.7.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

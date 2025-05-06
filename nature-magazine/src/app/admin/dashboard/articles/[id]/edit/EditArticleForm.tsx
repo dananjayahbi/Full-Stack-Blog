@@ -18,7 +18,6 @@ import {
   Switch,
   FormControlLabel,
   Autocomplete,
-  Divider,
   Alert,
   Container,
   Dialog,
@@ -55,7 +54,8 @@ const fallbackCategories = [
 ];
 const mockTagSuggestions = ['animals', 'plants', 'forests', 'oceans', 'endangered species', 'pollution'];
 
-export default function NewArticlePage() {
+// Note: We receive articleId as a prop, not from params
+export default function EditArticleForm({ articleId }: { articleId: string }) {
   const router = useRouter();
   
   // State for form data
@@ -67,7 +67,7 @@ export default function NewArticlePage() {
     categories: [] as string[],
     tags: [] as string[],
     featuredImage: '',
-    authorId: '', // Changed from author to authorId
+    authorId: '', 
     published: false
   });
   
@@ -93,6 +93,62 @@ export default function NewArticlePage() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [userError, setUserError] = useState('');
 
+  // Loading state for the article
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Fetch article data when component mounts
+  useEffect(() => {
+    const fetchArticle = async () => {
+      if (!articleId) return;
+      
+      setLoading(true);
+      setError('');
+      
+      try {
+        const response = await fetch(`/api/articles/${articleId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Handle the author field which might be an object or ID
+        let authorId = '';
+        if (data.author) {
+          if (typeof data.author === 'string') {
+            authorId = data.author;
+          } else if (typeof data.author === 'object' && data.author.id) {
+            authorId = data.author.id;
+          } else if (data.authorId) {
+            authorId = data.authorId;
+          }
+        }
+        
+        // Populate form data with the article's current data
+        setFormData({
+          title: data.title || '',
+          slug: data.slug || '',
+          excerpt: data.excerpt || '',
+          content: data.content || '',
+          categories: data.categories?.map((cat: any) => cat.id) || [],
+          tags: data.tags || [],
+          featuredImage: data.featuredImage || '',
+          authorId: authorId,
+          published: !!data.published
+        });
+      } catch (err: any) {
+        console.error('Error fetching article:', err);
+        setError(err.message || 'Failed to load article');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchArticle();
+  }, [articleId]); // Using articleId prop instead of params.id
+  
   // Fetch categories on component mount
   useEffect(() => {
     const fetchCategories = async () => {
@@ -121,7 +177,7 @@ export default function NewArticlePage() {
     
     fetchCategories();
   }, []);
-
+  
   // Fetch users on component mount
   useEffect(() => {
     const fetchUsers = async () => {
@@ -154,8 +210,8 @@ export default function NewArticlePage() {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Auto-generate slug from title
-    if (name === 'title') {
+    // Auto-generate slug from title only if slug is empty or unchanged from auto-generation
+    if (name === 'title' && (!formData.slug || formData.slug === formData.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-'))) {
       const slug = value
         .toLowerCase()
         .replace(/[^\w\s-]/g, '') // Remove special characters
@@ -185,6 +241,15 @@ export default function NewArticlePage() {
     setFormData(prev => ({ ...prev, categories: typeof value === 'string' ? value.split(',') : value }));
     if (errors.categories) {
       setErrors(prev => ({ ...prev, categories: '' }));
+    }
+  };
+  
+  // Handle select changes for author
+  const handleAuthorChange = (event: any) => {
+    const { value } = event.target;
+    setFormData(prev => ({ ...prev, authorId: value }));
+    if (errors.authorId) {
+      setErrors(prev => ({ ...prev, authorId: '' }));
     }
   };
   
@@ -236,15 +301,6 @@ export default function NewArticlePage() {
     img.src = imageUrl;
   };
   
-  // Handle select changes for author
-  const handleAuthorChange = (event: any) => {
-    const { value } = event.target;
-    setFormData(prev => ({ ...prev, authorId: value }));
-    if (errors.authorId) {
-      setErrors(prev => ({ ...prev, authorId: '' }));
-    }
-  };
-  
   // Validate the form
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
@@ -279,7 +335,7 @@ export default function NewArticlePage() {
     return Object.keys(newErrors).length === 0;
   };
   
-  // Handle form submission
+  // Handle form submission for updating the article
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -287,9 +343,9 @@ export default function NewArticlePage() {
       setIsSubmitting(true);
       
       try {
-        // Send data to the API endpoint
-        const response = await fetch('/api/articles', {
-          method: 'POST',
+        // Send data to update the article via the API endpoint
+        const response = await fetch(`/api/articles/${articleId}`, {
+          method: 'PUT', // Use PUT for updates
           headers: {
             'Content-Type': 'application/json',
           },
@@ -299,11 +355,11 @@ export default function NewArticlePage() {
         // Handle API response
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to create article');
+          throw new Error(errorData.error || 'Failed to update article');
         }
 
-        const savedArticle = await response.json();
-        console.log('Article created:', savedArticle);
+        const updatedArticle = await response.json();
+        console.log('Article updated:', updatedArticle);
         
         // Show success message
         setSuccess(true);
@@ -313,10 +369,10 @@ export default function NewArticlePage() {
           router.push('/admin/dashboard/articles');
         }, 2000);
       } catch (error: any) {
-        console.error('Error creating article:', error);
+        console.error('Error updating article:', error);
         setErrors(prev => ({ 
           ...prev, 
-          submit: error.message || 'Failed to create article. Please try again.' 
+          submit: error.message || 'Failed to update article. Please try again.' 
         }));
         setIsSubmitting(false);
       }
@@ -354,7 +410,7 @@ export default function NewArticlePage() {
             Back to Articles
           </Button>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
-            New Article
+            Edit Article
           </Typography>
         </Box>
         <Box>
@@ -373,7 +429,7 @@ export default function NewArticlePage() {
             startIcon={<SaveIcon />}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Saving...' : 'Save Article'}
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
           </Button>
         </Box>
       </Box>
@@ -381,7 +437,7 @@ export default function NewArticlePage() {
       {/* Success Alert */}
       {success && (
         <Alert severity="success" sx={{ mb: 4 }}>
-          Article created successfully! Redirecting...
+          Article updated successfully! Redirecting...
         </Alert>
       )}
       
@@ -392,332 +448,347 @@ export default function NewArticlePage() {
         </Alert>
       )}
       
-      {/* Form */}
-      <Paper sx={{ p: 3, borderRadius: 2 }}>
-        <Box
-          component="form"
-          id="article-form"
-          onSubmit={handleSubmit}
-          sx={{ mt: 1 }}
-        >
-          <Grid container spacing={3}>
-            {/* Left Column - Main Article Info */}
-            <Grid item xs={12} md={8}>
-              <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-                  Article Information
-                </Typography>
-              
-                {/* Title */}
-                <TextField
-                  name="title"
-                  label="Article Title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  error={!!errors.title}
-                  helperText={errors.title}
-                  sx={{ mb: 3 }}
-                />
-                
-                {/* Slug */}
-                <TextField
-                  name="slug"
-                  label="URL Slug"
-                  value={formData.slug}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  error={!!errors.slug}
-                  helperText={errors.slug || "Used in the article's URL (auto-generated from title)"}
-                  sx={{ mb: 3 }}
-                />
-                
-                {/* Excerpt */}
-                <TextField
-                  name="excerpt"
-                  label="Excerpt"
-                  value={formData.excerpt}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  multiline
-                  rows={3}
-                  error={!!errors.excerpt}
-                  helperText={errors.excerpt || `${formData.excerpt.length}/300 characters - A brief summary shown in article previews`}
-                />
-              </Paper>
-              
-              {/* Rich Text Editor */}
-              <Paper sx={{ p: 3, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-                  Article Content
-                </Typography>
-                
-                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-                  <Tabs value={activeTab} onChange={handleTabChange} aria-label="editor tabs">
-                    <Tab label="Editor" />
-                    <Tab label="HTML" />
-                    <Tab label="Preview" />
-                  </Tabs>
-                </Box>
-                
-                <Box sx={{ display: activeTab === 0 ? 'block' : 'none' }}>
-                  <LexicalEditor
-                    value={formData.content}
-                    onChange={handleContentChange}
-                    error={!!errors.content}
-                    helperText={errors.content}
-                    placeholder="Write your article content here..."
-                  />
-                </Box>
-                
-                <Box sx={{ display: activeTab === 1 ? 'block' : 'none', mt: 2 }}>
-                  <TextField
-                    value={formData.content}
-                    onChange={(e) => handleContentChange(e.target.value)}
-                    multiline
-                    rows={20}
-                    fullWidth
-                    variant="outlined"
-                    InputProps={{
-                      style: { fontFamily: 'monospace' }
-                    }}
-                  />
-                </Box>
-                
-                <Box 
-                  sx={{ 
-                    display: activeTab === 2 ? 'block' : 'none', 
-                    mt: 2,
-                    p: 2,
-                    border: '1px solid #e0e0e0',
-                    borderRadius: 1,
-                    minHeight: '400px'
-                  }}
-                  dangerouslySetInnerHTML={{ __html: formData.content }}
-                />
-              </Paper>
-            </Grid>
-            
-            {/* Right Column - Settings */}
-            <Grid item xs={12} md={4}>
-              {/* Author & Publish Status */}
-              <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-                  Publishing Settings
-                </Typography>
-                
-                {/* Author Dropdown */}
-                <FormControl 
-                  fullWidth 
-                  error={!!errors.authorId || !!userError}
-                  sx={{ mb: 3 }}
-                  disabled={isLoadingUsers}
-                >
-                  <InputLabel id="author-label">Author</InputLabel>
-                  <Select
-                    labelId="author-label"
-                    value={formData.authorId}
-                    onChange={handleAuthorChange}
-                    label="Author"
-                    required
-                    startAdornment={
-                      isLoadingUsers ? (
-                        <InputAdornment position="start">
-                          <CircularProgress size={20} />
-                        </InputAdornment>
-                      ) : null
-                    }
-                  >
-                    {users.map((user) => (
-                      <MenuItem key={user.id} value={user.id}>
-                        {user.name || user.email}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.authorId && (
-                    <FormHelperText>{errors.authorId}</FormHelperText>
-                  )}
-                  {userError && !errors.authorId && (
-                    <FormHelperText error>{userError}</FormHelperText>
-                  )}
-                </FormControl>
-                
-                {/* Publish Status */}
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formData.published}
-                      onChange={handlePublishToggle}
-                      color="primary"
-                    />
-                  }
-                  label={formData.published ? "Published" : "Draft"}
-                />
-                
-                <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    startIcon={<SaveIcon />}
-                    disabled={isSubmitting}
-                    fullWidth
-                  >
-                    {isSubmitting ? 'Saving...' : formData.published ? 'Save & Publish' : 'Save Draft'}
-                  </Button>
-                </Box>
-              </Paper>
-              
-              {/* Categories & Tags */}
-              <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-                  Categories & Tags
-                </Typography>
-                
-                {/* Categories */}
-                <FormControl 
-                  fullWidth 
-                  error={!!errors.categories || !!categoryError}
-                  sx={{ mb: 3 }}
-                >
-                  <InputLabel id="categories-label">Categories</InputLabel>
-                  <Select
-                    labelId="categories-label"
-                    multiple
-                    value={formData.categories}
-                    onChange={handleCategoryChange}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => {
-                          const category = categories.find(cat => cat.id === value);
-                          return (
-                            <Chip 
-                              key={value} 
-                              label={category ? category.name : value} 
-                              size="small" 
-                            />
-                          );
-                        })}
-                      </Box>
-                    )}
-                    disabled={isLoadingCategories}
-                    startAdornment={
-                      isLoadingCategories ? (
-                        <InputAdornment position="start">
-                          <CircularProgress size={20} />
-                        </InputAdornment>
-                      ) : null
-                    }
-                  >
-                    {categories.map((category) => (
-                      <MenuItem key={category.id} value={category.id}>
-                        {category.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.categories && (
-                    <FormHelperText>{errors.categories}</FormHelperText>
-                  )}
-                  {categoryError && !errors.categories && (
-                    <FormHelperText error>{categoryError}</FormHelperText>
-                  )}
-                </FormControl>
-                
-                {/* Tags */}
-                <Autocomplete
-                  multiple
-                  freeSolo
-                  options={mockTagSuggestions}
-                  value={formData.tags}
-                  onChange={handleTagsChange}
-                  renderTags={(value, getTagProps) =>
-                    value.map((option, index) => {
-                      // Extract props but handle key separately to avoid React warning
-                      const { key, ...chipProps } = getTagProps({ index });
-                      return (
-                        <Chip
-                          key={key}
-                          label={option}
-                          size="small"
-                          {...chipProps}
-                        />
-                      );
-                    })
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Tags"
-                      placeholder="Add tags..."
-                      helperText="Press Enter to add new tags"
-                    />
-                  )}
-                />
-              </Paper>
-              
-              {/* Featured Image */}
-              <Paper sx={{ p: 3, borderRadius: 2 }}>
-                <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-                  Featured Image
-                </Typography>
-                
-                <TextField
-                  name="featuredImage"
-                  label="Featured Image URL"
-                  value={formData.featuredImage}
-                  onChange={handleChange}
-                  fullWidth
-                  placeholder="https://example.com/image.jpg"
-                  InputProps={{
-                    endAdornment: (
-                      <Button 
-                        startIcon={<ImageIcon />}
-                        onClick={() => console.log('Open media library')}
-                      >
-                        Select
-                      </Button>
-                    ),
-                  }}
-                  sx={{ mb: 2 }}
-                />
-                
-                {/* Image Preview */}
-                {formData.featuredImage ? (
-                  <Box
-                    sx={{
-                      width: '100%',
-                      height: 200,
-                      backgroundImage: `url(${formData.featuredImage})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      borderRadius: 1
-                    }}
-                  />
-                ) : (
-                  <Box
-                    sx={{
-                      width: '100%',
-                      height: 200,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '1px dashed #ccc',
-                      borderRadius: 1,
-                      backgroundColor: '#f5f5f5'
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      No featured image selected
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
-            </Grid>
-          </Grid>
+      {/* Initial loading or error */}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+          <CircularProgress />
         </Box>
-      </Paper>
+      )}
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 4 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {/* Form - only show when article is loaded */}
+      {!loading && !error && (
+        <Paper sx={{ p: 3, borderRadius: 2 }}>
+          <Box
+            component="form"
+            id="article-form"
+            onSubmit={handleSubmit}
+            sx={{ mt: 1 }}
+          >
+            <Grid container spacing={3}>
+              {/* Left Column - Main Article Info */}
+              <Grid item xs={12} md={8}>
+                <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                    Article Information
+                  </Typography>
+                
+                  {/* Title */}
+                  <TextField
+                    name="title"
+                    label="Article Title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                    error={!!errors.title}
+                    helperText={errors.title}
+                    sx={{ mb: 3 }}
+                  />
+                  
+                  {/* Slug */}
+                  <TextField
+                    name="slug"
+                    label="URL Slug"
+                    value={formData.slug}
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                    error={!!errors.slug}
+                    helperText={errors.slug || "Used in the article's URL"}
+                    sx={{ mb: 3 }}
+                  />
+                  
+                  {/* Excerpt */}
+                  <TextField
+                    name="excerpt"
+                    label="Excerpt"
+                    value={formData.excerpt}
+                    onChange={handleChange}
+                    fullWidth
+                    required
+                    multiline
+                    rows={3}
+                    error={!!errors.excerpt}
+                    helperText={errors.excerpt || `${formData.excerpt.length}/300 characters - A brief summary shown in article previews`}
+                  />
+                </Paper>
+                
+                {/* Rich Text Editor */}
+                <Paper sx={{ p: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                    Article Content
+                  </Typography>
+                  
+                  <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+                    <Tabs value={activeTab} onChange={handleTabChange} aria-label="editor tabs">
+                      <Tab label="Editor" />
+                      <Tab label="HTML" />
+                      <Tab label="Preview" />
+                    </Tabs>
+                  </Box>
+                  
+                  <Box sx={{ display: activeTab === 0 ? 'block' : 'none' }}>
+                    <LexicalEditor
+                      value={formData.content}
+                      onChange={handleContentChange}
+                      error={!!errors.content}
+                      helperText={errors.content}
+                      placeholder="Write your article content here..."
+                    />
+                  </Box>
+                  
+                  <Box sx={{ display: activeTab === 1 ? 'block' : 'none', mt: 2 }}>
+                    <TextField
+                      value={formData.content}
+                      onChange={(e) => handleContentChange(e.target.value)}
+                      multiline
+                      rows={20}
+                      fullWidth
+                      variant="outlined"
+                      InputProps={{
+                        style: { fontFamily: 'monospace' }
+                      }}
+                    />
+                  </Box>
+                  
+                  <Box 
+                    sx={{ 
+                      display: activeTab === 2 ? 'block' : 'none', 
+                      mt: 2,
+                      p: 2,
+                      border: '1px solid #e0e0e0',
+                      borderRadius: 1,
+                      minHeight: '400px'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: formData.content }}
+                  />
+                </Paper>
+              </Grid>
+              
+              {/* Right Column - Settings */}
+              <Grid item xs={12} md={4}>
+                {/* Author & Publish Status */}
+                <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                    Publishing Settings
+                  </Typography>
+                  
+                  {/* Author Dropdown */}
+                  <FormControl 
+                    fullWidth 
+                    error={!!errors.authorId || !!userError}
+                    sx={{ mb: 3 }}
+                    disabled={isLoadingUsers}
+                  >
+                    <InputLabel id="author-label">Author</InputLabel>
+                    <Select
+                      labelId="author-label"
+                      value={formData.authorId}
+                      onChange={handleAuthorChange}
+                      label="Author"
+                      required
+                      startAdornment={
+                        isLoadingUsers ? (
+                          <InputAdornment position="start">
+                            <CircularProgress size={20} />
+                          </InputAdornment>
+                        ) : null
+                      }
+                    >
+                      {users.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {user.name || user.email}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.authorId && (
+                      <FormHelperText>{errors.authorId}</FormHelperText>
+                    )}
+                    {userError && !errors.authorId && (
+                      <FormHelperText error>{userError}</FormHelperText>
+                    )}
+                  </FormControl>
+                  
+                  {/* Publish Status */}
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formData.published}
+                        onChange={handlePublishToggle}
+                        color="primary"
+                      />
+                    }
+                    label={formData.published ? "Published" : "Draft"}
+                  />
+                  
+                  <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      startIcon={<SaveIcon />}
+                      disabled={isSubmitting}
+                      fullWidth
+                    >
+                      {isSubmitting ? 'Saving...' : formData.published ? 'Save & Publish' : 'Save Draft'}
+                    </Button>
+                  </Box>
+                </Paper>
+                
+                {/* Categories & Tags */}
+                <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                    Categories & Tags
+                  </Typography>
+                  
+                  {/* Categories */}
+                  <FormControl 
+                    fullWidth 
+                    error={!!errors.categories || !!categoryError}
+                    sx={{ mb: 3 }}
+                  >
+                    <InputLabel id="categories-label">Categories</InputLabel>
+                    <Select
+                      labelId="categories-label"
+                      multiple
+                      value={formData.categories}
+                      onChange={handleCategoryChange}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {selected.map((value) => {
+                            const category = categories.find(cat => cat.id === value);
+                            return (
+                              <Chip 
+                                key={value} 
+                                label={category ? category.name : value} 
+                                size="small" 
+                              />
+                            );
+                          })}
+                        </Box>
+                      )}
+                      disabled={isLoadingCategories}
+                      startAdornment={
+                        isLoadingCategories ? (
+                          <InputAdornment position="start">
+                            <CircularProgress size={20} />
+                          </InputAdornment>
+                        ) : null
+                      }
+                    >
+                      {categories.map((category) => (
+                        <MenuItem key={category.id} value={category.id}>
+                          {category.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.categories && (
+                      <FormHelperText>{errors.categories}</FormHelperText>
+                    )}
+                    {categoryError && !errors.categories && (
+                      <FormHelperText error>{categoryError}</FormHelperText>
+                    )}
+                  </FormControl>
+                  
+                  {/* Tags */}
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={mockTagSuggestions}
+                    value={formData.tags}
+                    onChange={handleTagsChange}
+                    renderTags={(value, getTagProps) =>
+                      value.map((option, index) => {
+                        // Extract props but handle key separately to avoid React warning
+                        const { key, ...chipProps } = getTagProps({ index });
+                        return (
+                          <Chip
+                            key={key}
+                            label={option}
+                            size="small"
+                            {...chipProps}
+                          />
+                        );
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Tags"
+                        placeholder="Add tags..."
+                        helperText="Press Enter to add new tags"
+                      />
+                    )}
+                  />
+                </Paper>
+                
+                {/* Featured Image */}
+                <Paper sx={{ p: 3, borderRadius: 2 }}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                    Featured Image
+                  </Typography>
+                  
+                  <TextField
+                    name="featuredImage"
+                    label="Featured Image URL"
+                    value={formData.featuredImage}
+                    onChange={handleChange}
+                    fullWidth
+                    placeholder="https://example.com/image.jpg"
+                    InputProps={{
+                      endAdornment: (
+                        <Button 
+                          startIcon={<ImageIcon />}
+                          onClick={() => console.log('Open media library')}
+                        >
+                          Select
+                        </Button>
+                      ),
+                    }}
+                    sx={{ mb: 2 }}
+                  />
+                  
+                  {/* Image Preview */}
+                  {formData.featuredImage ? (
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: 200,
+                        backgroundImage: `url(${formData.featuredImage})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        borderRadius: 1
+                      }}
+                    />
+                  ) : (
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: 200,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px dashed #ccc',
+                        borderRadius: 1,
+                        backgroundColor: '#f5f5f5'
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        No featured image selected
+                      </Typography>
+                    </Box>
+                  )}
+                </Paper>
+              </Grid>
+            </Grid>
+          </Box>
+        </Paper>
+      )}
       
       {/* Image Insert Dialog */}
       <Dialog open={imageDialogOpen} onClose={() => setImageDialogOpen(false)} maxWidth="sm" fullWidth>
