@@ -67,8 +67,7 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
     categories: [] as string[],
     tags: [] as string[],
     featuredImage: '',
-    author: '', 
-    authorObject: null as any,
+    authorId: '', 
     published: false
   });
   
@@ -88,6 +87,11 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
   const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [categoryError, setCategoryError] = useState('');
+
+  // State for users from API
+  const [users, setUsers] = useState<Array<{id: string, name: string, email: string}>>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [userError, setUserError] = useState('');
 
   // Loading state for the article
   const [loading, setLoading] = useState(true);
@@ -110,14 +114,15 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
         
         const data = await response.json();
         
-        // Handle the author field which might be an object
-        let authorValue = '';
+        // Handle the author field which might be an object or ID
+        let authorId = '';
         if (data.author) {
           if (typeof data.author === 'string') {
-            authorValue = data.author;
-          } else if (typeof data.author === 'object') {
-            // Store the full author object but display the name
-            authorValue = data.author.name || '';
+            authorId = data.author;
+          } else if (typeof data.author === 'object' && data.author.id) {
+            authorId = data.author.id;
+          } else if (data.authorId) {
+            authorId = data.authorId;
           }
         }
         
@@ -130,8 +135,7 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
           categories: data.categories?.map((cat: any) => cat.id) || [],
           tags: data.tags || [],
           featuredImage: data.featuredImage || '',
-          author: authorValue,
-          authorObject: typeof data.author === 'object' ? data.author : null,
+          authorId: authorId,
           published: !!data.published
         });
       } catch (err: any) {
@@ -174,6 +178,33 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
     fetchCategories();
   }, []);
   
+  // Fetch users on component mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoadingUsers(true);
+      setUserError('');
+      
+      try {
+        // Fetch users from the API endpoint
+        const response = await fetch('/api/users');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch users: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setUsers(data);
+        setIsLoadingUsers(false);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setUserError('Failed to load users.');
+        setIsLoadingUsers(false);
+      }
+    };
+    
+    fetchUsers();
+  }, []);
+  
   // Handle text field changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -210,6 +241,15 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
     setFormData(prev => ({ ...prev, categories: typeof value === 'string' ? value.split(',') : value }));
     if (errors.categories) {
       setErrors(prev => ({ ...prev, categories: '' }));
+    }
+  };
+  
+  // Handle select changes for author
+  const handleAuthorChange = (event: any) => {
+    const { value } = event.target;
+    setFormData(prev => ({ ...prev, authorId: value }));
+    if (errors.authorId) {
+      setErrors(prev => ({ ...prev, authorId: '' }));
     }
   };
   
@@ -287,8 +327,8 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
       newErrors.categories = 'At least one category is required';
     }
     
-    if (!formData.author.trim()) {
-      newErrors.author = 'Author is required';
+    if (!formData.authorId) {
+      newErrors.authorId = 'Author is required';
     }
     
     setErrors(newErrors);
@@ -303,20 +343,13 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
       setIsSubmitting(true);
       
       try {
-        // Prepare the data for submission
-        const submissionData = {
-          ...formData,
-          // If we had an author object, keep using it instead of just the name
-          author: formData.authorObject || formData.author
-        };
-        
         // Send data to update the article via the API endpoint
         const response = await fetch(`/api/articles/${articleId}`, {
           method: 'PUT', // Use PUT for updates
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(submissionData),
+          body: JSON.stringify(formData),
         });
 
         // Handle API response
@@ -546,18 +579,41 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
                     Publishing Settings
                   </Typography>
                   
-                  {/* Author */}
-                  <TextField
-                    name="author"
-                    label="Author"
-                    value={formData.author}
-                    onChange={handleChange}
-                    fullWidth
-                    required
-                    error={!!errors.author}
-                    helperText={errors.author}
+                  {/* Author Dropdown */}
+                  <FormControl 
+                    fullWidth 
+                    error={!!errors.authorId || !!userError}
                     sx={{ mb: 3 }}
-                  />
+                    disabled={isLoadingUsers}
+                  >
+                    <InputLabel id="author-label">Author</InputLabel>
+                    <Select
+                      labelId="author-label"
+                      value={formData.authorId}
+                      onChange={handleAuthorChange}
+                      label="Author"
+                      required
+                      startAdornment={
+                        isLoadingUsers ? (
+                          <InputAdornment position="start">
+                            <CircularProgress size={20} />
+                          </InputAdornment>
+                        ) : null
+                      }
+                    >
+                      {users.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {user.name || user.email}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.authorId && (
+                      <FormHelperText>{errors.authorId}</FormHelperText>
+                    )}
+                    {userError && !errors.authorId && (
+                      <FormHelperText error>{userError}</FormHelperText>
+                    )}
+                  </FormControl>
                   
                   {/* Publish Status */}
                   <FormControlLabel
@@ -860,7 +916,7 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
             
             <Box sx={{ display: 'flex', gap: 2, mb: 3, color: 'text.secondary' }}>
               <Typography variant="body2">
-                By {formData.author || 'Unknown Author'}
+                By {formData.authorId || 'Unknown Author'}
               </Typography>
               <Typography variant="body2">
                 {new Date().toLocaleDateString('en-US', { 

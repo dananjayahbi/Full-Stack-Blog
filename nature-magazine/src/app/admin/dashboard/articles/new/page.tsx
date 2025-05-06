@@ -67,7 +67,7 @@ export default function NewArticlePage() {
     categories: [] as string[],
     tags: [] as string[],
     featuredImage: '',
-    author: '', // This would be pre-filled with current user in real app
+    authorId: '', // Changed from author to authorId
     published: false
   });
   
@@ -87,6 +87,11 @@ export default function NewArticlePage() {
   const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [categoryError, setCategoryError] = useState('');
+
+  // State for users from API
+  const [users, setUsers] = useState<Array<{id: string, name: string, email: string}>>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [userError, setUserError] = useState('');
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -115,6 +120,33 @@ export default function NewArticlePage() {
     };
     
     fetchCategories();
+  }, []);
+
+  // Fetch users on component mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoadingUsers(true);
+      setUserError('');
+      
+      try {
+        // Fetch users from the API endpoint
+        const response = await fetch('/api/users');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch users: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setUsers(data);
+        setIsLoadingUsers(false);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setUserError('Failed to load users.');
+        setIsLoadingUsers(false);
+      }
+    };
+    
+    fetchUsers();
   }, []);
   
   // Handle text field changes
@@ -204,6 +236,15 @@ export default function NewArticlePage() {
     img.src = imageUrl;
   };
   
+  // Handle select changes for author
+  const handleAuthorChange = (event: any) => {
+    const { value } = event.target;
+    setFormData(prev => ({ ...prev, authorId: value }));
+    if (errors.authorId) {
+      setErrors(prev => ({ ...prev, authorId: '' }));
+    }
+  };
+  
   // Validate the form
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
@@ -230,8 +271,8 @@ export default function NewArticlePage() {
       newErrors.categories = 'At least one category is required';
     }
     
-    if (!formData.author.trim()) {
-      newErrors.author = 'Author is required';
+    if (!formData.authorId) {
+      newErrors.authorId = 'Author is required';
     }
     
     setErrors(newErrors);
@@ -468,18 +509,41 @@ export default function NewArticlePage() {
                   Publishing Settings
                 </Typography>
                 
-                {/* Author */}
-                <TextField
-                  name="author"
-                  label="Author"
-                  value={formData.author}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  error={!!errors.author}
-                  helperText={errors.author}
+                {/* Author Dropdown */}
+                <FormControl 
+                  fullWidth 
+                  error={!!errors.authorId || !!userError}
                   sx={{ mb: 3 }}
-                />
+                  disabled={isLoadingUsers}
+                >
+                  <InputLabel id="author-label">Author</InputLabel>
+                  <Select
+                    labelId="author-label"
+                    value={formData.authorId}
+                    onChange={handleAuthorChange}
+                    label="Author"
+                    required
+                    startAdornment={
+                      isLoadingUsers ? (
+                        <InputAdornment position="start">
+                          <CircularProgress size={20} />
+                        </InputAdornment>
+                      ) : null
+                    }
+                  >
+                    {users.map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.name || user.email}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.authorId && (
+                    <FormHelperText>{errors.authorId}</FormHelperText>
+                  )}
+                  {userError && !errors.authorId && (
+                    <FormHelperText error>{userError}</FormHelperText>
+                  )}
+                </FormControl>
                 
                 {/* Publish Status */}
                 <FormControlLabel
@@ -781,7 +845,7 @@ export default function NewArticlePage() {
             
             <Box sx={{ display: 'flex', gap: 2, mb: 3, color: 'text.secondary' }}>
               <Typography variant="body2">
-                By {formData.author || 'Unknown Author'}
+                By {formData.authorId || 'Unknown Author'}
               </Typography>
               <Typography variant="body2">
                 {new Date().toLocaleDateString('en-US', { 
