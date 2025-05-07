@@ -1,3 +1,4 @@
+import React from 'react';
 import MainLayout from '@/components/MainLayout';
 import { Box, Typography, Grid, Card, CardMedia, CardContent, Breadcrumbs, Chip, Button } from '@mui/material';
 import Link from 'next/link';
@@ -7,9 +8,13 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 const categoriesData = {};
 
 export default function CategoryPage({ params }: { params: { slug: string } }) {
+  // Unwrap params to access slug safely
+  const unwrappedParams = React.use(params);
+  const slug = unwrappedParams.slug;
+  
   // In a real app, we would fetch the category data from a database
   // based on the slug parameter
-  const category = categoriesData[params.slug];
+  const category = categoriesData[slug];
 
   // If category doesn't exist, this would typically redirect to 404
   // but for simplicity we're just showing a message
@@ -149,8 +154,7 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
                   <CardMedia
                     component="div"
                     sx={{
-                      pt: '56.25%', // 16:9 aspect ratio
-                      position: 'relative',
+                      pt: '56.25%' // 16:9 aspect ratio
                     }}
                     image={article.image || '/images/placeholder.jpg'}
                   >
@@ -232,14 +236,14 @@ export default function CategoryPage({ params }: { params: { slug: string } }) {
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {Object.entries(categoriesData)
-            .filter(([slug]) => slug !== params.slug)
+            .filter(([entrySlug]) => entrySlug !== slug)
             .slice(0, 5)
-            .map(([slug, catData]) => (
+            .map(([entrySlug, catData]) => (
               <Chip 
-                key={slug}
+                key={entrySlug}
                 label={catData.name}
                 component={Link}
-                href={`/categories/${slug}`}
+                href={`/categories/${entrySlug}`}
                 clickable
                 color="primary"
                 variant="outlined"

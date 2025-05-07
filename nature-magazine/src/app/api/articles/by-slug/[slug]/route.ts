@@ -10,7 +10,9 @@ interface Params {
 // GET /api/articles/by-slug/[slug] - Fetch a specific article by slug
 export async function GET(request: NextRequest, { params }: Params) {
   try {
-    const { slug } = params;
+    // Await params to ensure slug is available
+    const paramsData = await params;
+    const { slug } = paramsData;
     
     // Handle preview specially
     if (slug.startsWith('preview-')) {

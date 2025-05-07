@@ -9,6 +9,14 @@
   --foreground: #171717;
   --foreground-rgb: 0, 0, 0;
   --background-rgb: 245, 245, 247;
+  
+  /* Nature magazine theme colors */
+  --primary-main: #2E7D32;
+  --primary-light: #4CAF50;
+  --primary-dark: #1B5E20;
+  --secondary-main: #8D6E63;
+  --secondary-light: #A1887F;
+  --secondary-dark: #6D4C41;
 }
 
 @theme inline {
@@ -18,6 +26,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Removing dark mode preference to ensure consistent light theme
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -26,15 +35,76 @@
     --background-rgb: 0, 0, 0;
   }
 }
+*/
 
 body {
   background: var(--background);
   color: var(--foreground);
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 0;
+}
+
+/* Article content specific styles */
+.article-content {
+  font-family: 'Georgia', serif;
+  line-height: 1.8;
+  color: #333;
+}
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+  font-family: 'Georgia', serif;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  font-weight: 600;
+  color: #1B5E20;
+}
+
+.article-content p {
+  margin-bottom: 1.2em;
+  font-size: 1.1rem;
+}
+
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+}
+
+.article-content blockquote {
+  border-left: 4px solid var(--primary-main);
+  padding-left: 1rem;
+  margin-left: 0;
+  font-style: italic;
+  color: #555;
+  background-color: rgba(46, 125, 50, 0.05);
+  padding: 1rem;
+  border-radius: 0 4px 4px 0;
+}
+
+.article-content ul, 
+.article-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.article-content li {
+  margin-bottom: 0.5rem;
+}
+
+.article-content a {
+  color: var(--primary-main);
+  text-decoration: none;
+}
+
+.article-content a:hover {
+  text-decoration: underline;
 }
 
 /* Custom Quill editor styles */
