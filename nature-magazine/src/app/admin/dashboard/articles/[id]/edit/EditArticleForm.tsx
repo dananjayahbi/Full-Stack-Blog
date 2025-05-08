@@ -573,217 +573,224 @@ export default function EditArticleForm({ articleId }: { articleId: string }) {
               
               {/* Right Column - Settings */}
               <Grid item xs={12} md={4}>
-                {/* Author & Publish Status */}
-                <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-                    Publishing Settings
-                  </Typography>
-                  
-                  {/* Author Dropdown */}
-                  <FormControl 
-                    fullWidth 
-                    error={!!errors.authorId || !!userError}
-                    sx={{ mb: 3 }}
-                    disabled={isLoadingUsers}
-                  >
-                    <InputLabel id="author-label">Author</InputLabel>
-                    <Select
-                      labelId="author-label"
-                      value={formData.authorId}
-                      onChange={handleAuthorChange}
-                      label="Author"
-                      required
-                      startAdornment={
-                        isLoadingUsers ? (
-                          <InputAdornment position="start">
-                            <CircularProgress size={20} />
-                          </InputAdornment>
-                        ) : null
-                      }
+                <Box sx={{ 
+                  position: { md: 'sticky' },
+                  top: { md: '24px' },
+                  maxHeight: { md: 'calc(100vh - 48px)' },
+                  overflowY: { md: 'auto' }
+                }}>
+                  {/* Author & Publish Status */}
+                  <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                    <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                      Publishing Settings
+                    </Typography>
+                    
+                    {/* Author Dropdown */}
+                    <FormControl 
+                      fullWidth 
+                      error={!!errors.authorId || !!userError}
+                      sx={{ mb: 3 }}
+                      disabled={isLoadingUsers}
                     >
-                      {users.map((user) => (
-                        <MenuItem key={user.id} value={user.id}>
-                          {user.name || user.email}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {errors.authorId && (
-                      <FormHelperText>{errors.authorId}</FormHelperText>
-                    )}
-                    {userError && !errors.authorId && (
-                      <FormHelperText error>{userError}</FormHelperText>
-                    )}
-                  </FormControl>
-                  
-                  {/* Publish Status */}
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={formData.published}
-                        onChange={handlePublishToggle}
-                        color="primary"
-                      />
-                    }
-                    label={formData.published ? "Published" : "Draft"}
-                  />
-                  
-                  <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={<SaveIcon />}
-                      disabled={isSubmitting}
-                      fullWidth
-                    >
-                      {isSubmitting ? 'Saving...' : formData.published ? 'Save & Publish' : 'Save Draft'}
-                    </Button>
-                  </Box>
-                </Paper>
-                
-                {/* Categories & Tags */}
-                <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-                    Categories & Tags
-                  </Typography>
-                  
-                  {/* Categories */}
-                  <FormControl 
-                    fullWidth 
-                    error={!!errors.categories || !!categoryError}
-                    sx={{ mb: 3 }}
-                  >
-                    <InputLabel id="categories-label">Categories</InputLabel>
-                    <Select
-                      labelId="categories-label"
-                      multiple
-                      value={formData.categories}
-                      onChange={handleCategoryChange}
-                      renderValue={(selected) => (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {selected.map((value) => {
-                            const category = categories.find(cat => cat.id === value);
-                            return (
-                              <Chip 
-                                key={value} 
-                                label={category ? category.name : value} 
-                                size="small" 
-                              />
-                            );
-                          })}
-                        </Box>
+                      <InputLabel id="author-label">Author</InputLabel>
+                      <Select
+                        labelId="author-label"
+                        value={formData.authorId}
+                        onChange={handleAuthorChange}
+                        label="Author"
+                        required
+                        startAdornment={
+                          isLoadingUsers ? (
+                            <InputAdornment position="start">
+                              <CircularProgress size={20} />
+                            </InputAdornment>
+                          ) : null
+                        }
+                      >
+                        {users.map((user) => (
+                          <MenuItem key={user.id} value={user.id}>
+                            {user.name || user.email}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {errors.authorId && (
+                        <FormHelperText>{errors.authorId}</FormHelperText>
                       )}
-                      disabled={isLoadingCategories}
-                      startAdornment={
-                        isLoadingCategories ? (
-                          <InputAdornment position="start">
-                            <CircularProgress size={20} />
-                          </InputAdornment>
-                        ) : null
+                      {userError && !errors.authorId && (
+                        <FormHelperText error>{userError}</FormHelperText>
+                      )}
+                    </FormControl>
+                    
+                    {/* Publish Status */}
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={formData.published}
+                          onChange={handlePublishToggle}
+                          color="primary"
+                        />
                       }
-                    >
-                      {categories.map((category) => (
-                        <MenuItem key={category.id} value={category.id}>
-                          {category.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {errors.categories && (
-                      <FormHelperText>{errors.categories}</FormHelperText>
-                    )}
-                    {categoryError && !errors.categories && (
-                      <FormHelperText error>{categoryError}</FormHelperText>
-                    )}
-                  </FormControl>
-                  
-                  {/* Tags */}
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={mockTagSuggestions}
-                    value={formData.tags}
-                    onChange={handleTagsChange}
-                    renderTags={(value, getTagProps) =>
-                      value.map((option, index) => {
-                        // Extract props but handle key separately to avoid React warning
-                        const { key, ...chipProps } = getTagProps({ index });
-                        return (
-                          <Chip
-                            key={key}
-                            label={option}
-                            size="small"
-                            {...chipProps}
-                          />
-                        );
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Tags"
-                        placeholder="Add tags..."
-                        helperText="Press Enter to add new tags"
-                      />
-                    )}
-                  />
-                </Paper>
-                
-                {/* Featured Image */}
-                <Paper sx={{ p: 3, borderRadius: 2 }}>
-                  <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-                    Featured Image
-                  </Typography>
-                  
-                  <TextField
-                    name="featuredImage"
-                    label="Featured Image URL"
-                    value={formData.featuredImage}
-                    onChange={handleChange}
-                    fullWidth
-                    placeholder="https://example.com/image.jpg"
-                    InputProps={{
-                      endAdornment: (
-                        <Button 
-                          startIcon={<ImageIcon />}
-                          onClick={() => console.log('Open media library')}
-                        >
-                          Select
-                        </Button>
-                      ),
-                    }}
-                    sx={{ mb: 2 }}
-                  />
-                  
-                  {/* Image Preview */}
-                  {formData.featuredImage ? (
-                    <Box
-                      sx={{
-                        width: '100%',
-                        height: 200,
-                        backgroundImage: `url(${formData.featuredImage})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        borderRadius: 1
-                      }}
+                      label={formData.published ? "Published" : "Draft"}
                     />
-                  ) : (
-                    <Box
-                      sx={{
-                        width: '100%',
-                        height: 200,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        border: '1px dashed #ccc',
-                        borderRadius: 1,
-                        backgroundColor: '#f5f5f5'
-                      }}
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        No featured image selected
-                      </Typography>
+                    
+                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        startIcon={<SaveIcon />}
+                        disabled={isSubmitting}
+                        fullWidth
+                      >
+                        {isSubmitting ? 'Saving...' : formData.published ? 'Save & Publish' : 'Save Draft'}
+                      </Button>
                     </Box>
-                  )}
-                </Paper>
+                  </Paper>
+                  
+                  {/* Categories & Tags */}
+                  <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                    <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                      Categories & Tags
+                    </Typography>
+                    
+                    {/* Categories */}
+                    <FormControl 
+                      fullWidth 
+                      error={!!errors.categories || !!categoryError}
+                      sx={{ mb: 3 }}
+                    >
+                      <InputLabel id="categories-label">Categories</InputLabel>
+                      <Select
+                        labelId="categories-label"
+                        multiple
+                        value={formData.categories}
+                        onChange={handleCategoryChange}
+                        renderValue={(selected) => (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((value) => {
+                              const category = categories.find(cat => cat.id === value);
+                              return (
+                                <Chip 
+                                  key={value} 
+                                  label={category ? category.name : value} 
+                                  size="small" 
+                                />
+                              );
+                            })}
+                          </Box>
+                        )}
+                        disabled={isLoadingCategories}
+                        startAdornment={
+                          isLoadingCategories ? (
+                            <InputAdornment position="start">
+                              <CircularProgress size={20} />
+                            </InputAdornment>
+                          ) : null
+                        }
+                      >
+                        {categories.map((category) => (
+                          <MenuItem key={category.id} value={category.id}>
+                            {category.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {errors.categories && (
+                        <FormHelperText>{errors.categories}</FormHelperText>
+                      )}
+                      {categoryError && !errors.categories && (
+                        <FormHelperText error>{categoryError}</FormHelperText>
+                      )}
+                    </FormControl>
+                    
+                    {/* Tags */}
+                    <Autocomplete
+                      multiple
+                      freeSolo
+                      options={mockTagSuggestions}
+                      value={formData.tags}
+                      onChange={handleTagsChange}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => {
+                          // Extract props but handle key separately to avoid React warning
+                          const { key, ...chipProps } = getTagProps({ index });
+                          return (
+                            <Chip
+                              key={key}
+                              label={option}
+                              size="small"
+                              {...chipProps}
+                            />
+                          );
+                        })
+                      }
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Tags"
+                          placeholder="Add tags..."
+                          helperText="Press Enter to add new tags"
+                        />
+                      )}
+                    />
+                  </Paper>
+                  
+                  {/* Featured Image */}
+                  <Paper sx={{ p: 3, borderRadius: 2 }}>
+                    <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+                      Featured Image
+                    </Typography>
+                    
+                    <TextField
+                      name="featuredImage"
+                      label="Featured Image URL"
+                      value={formData.featuredImage}
+                      onChange={handleChange}
+                      fullWidth
+                      placeholder="https://example.com/image.jpg"
+                      InputProps={{
+                        endAdornment: (
+                          <Button 
+                            startIcon={<ImageIcon />}
+                            onClick={() => console.log('Open media library')}
+                          >
+                            Select
+                          </Button>
+                        ),
+                      }}
+                      sx={{ mb: 2 }}
+                    />
+                    
+                    {/* Image Preview */}
+                    {formData.featuredImage ? (
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: 200,
+                          backgroundImage: `url(${formData.featuredImage})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          borderRadius: 1
+                        }}
+                      />
+                    ) : (
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: 200,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '1px dashed #ccc',
+                          borderRadius: 1,
+                          backgroundColor: '#f5f5f5'
+                        }}
+                      >
+                        <Typography variant="body2" color="text.secondary">
+                          No featured image selected
+                        </Typography>
+                      </Box>
+                    )}
+                  </Paper>
+                </Box>
               </Grid>
             </Grid>
           </Box>
